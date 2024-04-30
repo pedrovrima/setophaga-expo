@@ -15,7 +15,7 @@ export default function Species() {
   const thisSpecies = sppDataQuery?.data.find((spp) => '' + spp.Evaldo__c === id);
   return (
     <>
-      <Link className=" w-min" href="/add">
+      <Link className=" w-min" href={`/add?id=${id}` as string}>
         <Text>Adicionar</Text>
       </Link>
       <Stack.Screen options={{ title: thisSpecies?.Name }} />

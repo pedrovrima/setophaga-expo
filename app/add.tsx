@@ -1,21 +1,25 @@
-import { Stack, useLocalSearchParams } from 'expo-router';
-import React, { useState } from 'react';
+import { useLocalSearchParams } from 'expo-router';
+import React from 'react';
 import { useForm, Controller } from 'react-hook-form';
-import { View, Text, TextInput, Button, StyleSheet, SafeAreaView } from 'react-native';
-import { SelectList } from 'react-native-dropdown-select-list';
+import { View, Text, TextInput, Button, SafeAreaView } from 'react-native';
 
-import { municipios } from '~/municipios.json';
-import { RequestBody } from './spp/name+api';
 import Select from '~/components/Select';
+import useCreateName from '~/hooks/useCreateName';
+import useSpeciesData from '~/hooks/useSpeciesData';
+import { municipios } from '~/municipios.json';
 
 export default function Details() {
   const { id } = useLocalSearchParams();
-  const states = municipios.reduce((red: { key: string; value: string }[], mun) => {
-    if (red.find((m) => m?.value === mun['UF-sigla'])) {
+  const species = useSpeciesData();
+  const thisSpp = species?.data?.find((spp) => '' + spp.Evaldo__c === id);
+  console.log(species, thisSpp);
+  const createNameMutations = useCreateName();
+  const states = municipios.reduce((red: string[], mun) => {
+    if (red.find((m) => m === mun['UF-sigla'])) {
       return red;
     }
     const uf = mun['UF-sigla'];
-    return [...red, { key: uf, value: uf }];
+    return [...red, uf];
   }, []);
 
   const {
@@ -24,78 +28,94 @@ export default function Details() {
     formState: { errors },
     setValue,
     getValues,
+    watch,
   } = useForm();
 
   const cities = () =>
     states &&
     municipios
-      .filter((mun) => mun['UF-sigla'] === getValues('state'))
-      .map((mun) => ({
-        key: mun['municipio-nome'],
-        value: mun['municipio-nome'],
-      }));
-  const onSubmit = (data: RequestBody) => {
+      .filter((mun) => mun['UF-sigla'] === watch('state'))
+      .map((mun) => mun['municipio-nome']);
+  const onSubmit = (data) => {
     // Simulate form submission
-    console.log(data);
+    const _data = {
+      ...data,
+      id: thisSpp?.Id,
+      collectorsId: 1,
+      collectorsName: 'abc',
+    };
+    createNameMutations.mutate(_data);
   };
 
   return (
     <SafeAreaView>
-      <Select className={''} />
       <View>
         {/* Form Girdileri */}
         <Controller
           control={control}
+          defaultValue={''}
           render={({ field }) => <TextInput {...field} placeholder="Nome ouvido" />}
           name="name"
           rules={{ required: 'You must enter your name' }}
         />
-        {errors.name && <Text>{errors?.name?.message}</Text>}
+        {errors.name && <ErrorText>{errors?.name?.message as string}</ErrorText>}
 
         <Controller
           control={control}
+          defaultValue={''}
           render={({ field }) => <TextInput {...field} placeholder="Informante" />}
           name="informer"
           rules={{ required: 'You must enter your informer' }}
         />
-        {errors.informer && <Text>{errors?.informer?.message}</Text>}
+        {errors.informer && <ErrorText>{errors?.informer?.message as string}</ErrorText>}
 
         <Controller
           control={control}
+          defaultValue={''}
           render={({ field }) => (
-            <SelectList
+            <Select
               {...field}
-              setSelected={(e) => {
-                setValue('state', e);
-                setValue('city', '');
-              }}
-              data={states}
-              placeholder="Informante"
+              options={states}
+              placeholder="Selecione o estado"
+              changeCallback={() => setValue('city', '')}
             />
           )}
           name="state"
-          rules={{ required: 'You must enter your informer' }}
+          rules={{ required: 'You must enter a state  ' }}
         />
-        {errors.state && <Text>{errors?.state?.message}</Text>}
+        {errors.state && <ErrorText>{errors?.state?.message as string}</ErrorText>}
 
         <Controller
           control={control}
+          defaultValue={''}
           render={({ field }) => (
-            <SelectList
+            <Select
               {...field}
-              disabled={!cities()}
-              setSelected={(e) => setValue('city', e)}
-              data={cities()}
-              placeholder="Informante"
+              disabled={!watch('state')}
+              placeholder="Selecione a cidade"
+              options={cities()}
             />
           )}
           name="city"
-          rules={{ required: 'You must enter your informer' }}
+          rules={{ required: 'You must enter your city' }}
         />
-        {errors.state && <Text>{errors?.state?.message}</Text>}
+        {errors.city && <ErrorText>{errors?.city?.message as string}</ErrorText>}
+
+        <Controller
+          control={control}
+          defaultValue={''}
+          render={({ field }) => <TextInput {...field} placeholder="Localidade" />}
+          name="location"
+          rules={{ required: 'Descreva a localidade' }}
+        />
+        {errors.location && <ErrorText>{errors?.location?.message as string}</ErrorText>}
         {/* Submit Butonu */}
         <Button title="Submit" onPress={handleSubmit(onSubmit)} />
       </View>
     </SafeAreaView>
   );
 }
+
+const ErrorText = ({ children }: { children: React.ReactNode }) => {
+  return <Text className="text-red-500">{children}</Text>;
+};

@@ -16,52 +16,54 @@ interface NewName {
   Regiao__c: string;
 }
 
-interface RequestBody {
+export interface RequestBody {
   date: Date;
   id: string;
   state: string;
-  locality: string;
+  location: string;
   city: string;
   collectorsId: number;
+  collectorsName: string;
   informer: string;
   name: string;
 }
 
 export const POST = async (request: Request): Promise<Response> => {
   const auth = await getAccessToken();
-  const url = 'https://yourInstance.salesforce.com/services/data/vXX.0/sobjects/BirdCollection__c/'; // Replace 'yourInstance' and 'XX.0' with your actual Salesforce instance and API version.
+  const url = 'https://evaldo.my.salesforce.com/services/data/v58.0/sobjects/Musk__c/';
 
   const body = (await request.json()) as RequestBody;
 
   const data = {
-    Ave__c: '',
-    dataHoraDaColeta__c: body.date,
+    Ave__c: body.id,
+    dataHoraDaColeta__c: new Date(),
     Estado__c: body.state,
     // GPS_da_Coleta__Latitude__s: -23.5505,
     // GPS_da_Coleta__Longitude__s: -46.6333,
-    Localidade__c: body.locality,
+    Localidade__c: body.location,
     Municipio__c: body.city,
     Name: body.name,
-    OwnerId: '005xx000001Sv6AAAS',
+    OwnerId: '0054w00000D61yRAAR',
     Pais__c: 'Brazil',
-    QuemColetou__c: body.collectorsId,
-    quemInformou__c: body.informer,
+    ColetorName__c: body.collectorsName,
+    ColetorId__c: body.collectorsId,
+    QuemInformou__c: body.informer,
     Regiao__c: municipalitys.municipios.find((mun) => mun['UF-sigla'] === body.state)?.[
-      'regiao-sigla'
+      'regiao-nome'
     ],
   };
 
-  const fetchData = {
+  console.log(auth, data);
+  const postData = {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      Authorization: auth.access_token, // Replace 'YourAccessToken' with your actual access token
+      Authorization: `Bearer ${auth?.access_token}`,
     },
     body: JSON.stringify(data),
   };
 
-  return await fetch(url, fetchData)
-    .then((response) => response.json())
-    .then((data) => data)
-    .catch((error) => console.error('Error:', error));
+  const response = await fetch(url, postData);
+  console.log(response);
+  return response;
 };

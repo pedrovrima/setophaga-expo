@@ -1,8 +1,8 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useQuery } from '@tanstack/react-query';
 import { useEffect, useState } from 'react';
-import { BirdRecord } from '~/app/species+api';
 
+import { BirdRecord } from '~/app/species+api';
 import { getAllSpecies } from '~/services/api';
 
 export default function useSpeciesData() {
