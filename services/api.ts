@@ -24,6 +24,7 @@ export const getAccessToken = async (): Promise<SalesforceAccessToken> => {
   });
 
   const auth = await _auth.json();
+  console.log(auth);
   return auth;
 };
 
