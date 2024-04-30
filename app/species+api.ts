@@ -62,9 +62,12 @@ export const GET = async (): Promise<Response> => {
       }
     );
 
-    const returnedData = await data.json();
+    console.log(data);
+    if (data) {
+      const returnedData = await data.json();
 
-    return Response.json(returnedData.records);
+      return Response.json(returnedData.records);
+    }
   } catch (e: any) {
     throw new Error(e?.message);
   }
