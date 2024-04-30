@@ -2,8 +2,8 @@ import { Session } from '@supabase/supabase-js';
 import { useLocalSearchParams } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { useForm, Controller } from 'react-hook-form';
-import { View, Button, SafeAreaView } from 'react-native';
-import { Input, XStack, YStack, Text } from 'tamagui';
+import { View, SafeAreaView } from 'react-native';
+import { Input, XStack, YStack, Text, Button, H3 } from 'tamagui';
 
 import Select from '~/components/Select';
 import Authentication from '~/components/screens/Authentication';
@@ -67,7 +67,10 @@ export default function Details() {
   return (
     <SafeAreaView>
       {session?.user.id ? (
-        <YStack gap="$2" paddingVertical="$4" alignSelf="center" minWidth={700}>
+        <YStack gap="$2" paddingVertical="$4" maxWidth={700} marginHorizontal="$4">
+          <H3 textAlign="center">
+            Adicionar nome para <H3 fontStyle="italic">{thisSpp?.Name}</H3>
+          </H3>
           {/* Form Girdileri */}
           <Controller
             control={control}
@@ -134,7 +137,9 @@ export default function Details() {
           />
           {errors.location && <ErrorText>{errors?.location?.message as string}</ErrorText>}
           {/* Submit Butonu */}
-          <Button title="Submit" onPress={handleSubmit(onSubmit)} />
+          <Button backgroundColor={'$black11'} onPress={handleSubmit(onSubmit)}>
+            Enviar
+          </Button>
         </YStack>
       ) : (
         <Authentication />

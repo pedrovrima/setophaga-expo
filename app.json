@@ -13,7 +13,7 @@
       [
         "expo-router",
         {
-          "origin": "https://evanbacon.dev/"
+          "origin": "https://xara-roan.vercel.app"
         }
       ],
       "expo-font"
@@ -40,6 +40,15 @@
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
+      },
+      "package": "com.pedrovrima.setophagaexpo"
+    },
+    "extra": {
+      "router": {
+        "origin": "https://xara-roan.vercel.app"
+      },
+      "eas": {
+        "projectId": "0d3d31fb-03c8-4fea-a60d-9b6742df408c"
       }
     }
   }

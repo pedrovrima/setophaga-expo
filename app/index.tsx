@@ -1,10 +1,9 @@
 import { useState } from 'react';
 import { FlashList } from '@shopify/flash-list';
-import { useQuery } from '@tanstack/react-query';
-import { Stack, Link } from 'expo-router';
-import { Text, Input, XStack, YStack, H4 } from 'tamagui';
 
-import { Container } from '~/components/Container';
+import { Stack, Link } from 'expo-router';
+import { Text, Input, XStack, YStack, H4, SizableText } from 'tamagui';
+
 import useSpeciesSearch from '~/hooks/useSpeciesSearch';
 import useSpeciesData from '~/hooks/useSpeciesData';
 
@@ -26,7 +25,11 @@ export default function Home() {
             estimatedItemSize={10}
             renderItem={({ item, index }) => {
               if (typeof item === 'string') {
-                return <H4 className="mb-4 mt-6 w-3/4 text-lg font-bold">{item}</H4>;
+                return (
+                  <H4 paddingLeft="$4" marginTop="$2">
+                    {item}
+                  </H4>
+                );
               }
               return (
                 <Link href={`/spp/${'' + item?.id}`}>
@@ -35,10 +38,10 @@ export default function Home() {
                     paddingVertical="$2"
                     backgroundColor={index % 2 ? `#fff` : `#ccc`}
                     justifyContent="space-between"
-                    flex={1}
-                    className={`max-w-screen flex w-screen flex-[1] flex-row gap-6 py-4 ${index % 2 ? 'bg-gray-300' : 'bg-white'} px-2`}>
+                    width={'100%'}
+                    flex={1}>
                     <Text>{item?.stringFound}</Text>
-                    <Text fontStyle="italic">{item?.scientificName}</Text>
+                    <SizableText fontStyle="italic">{item?.scientificName}</SizableText>
                   </XStack>
                 </Link>
               );

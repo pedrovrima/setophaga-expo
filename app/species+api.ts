@@ -69,6 +69,7 @@ export const GET = async (): Promise<Response> => {
 
       return Response.json(returnedData.records);
     }
+    return Response.json({});
   } catch (e: any) {
     throw new Error(e?.message);
   }

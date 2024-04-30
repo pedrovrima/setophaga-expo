@@ -1,6 +1,6 @@
 import { Link, Stack, useLocalSearchParams, router } from 'expo-router';
-import { Text, View, TouchableOpacity } from 'react-native';
-import { Button } from 'tamagui';
+
+import { Button, Text, YStack } from 'tamagui';
 import useSpeciesData from '~/hooks/useSpeciesData';
 import { languageDictionary } from '~/hooks/useSpeciesSearch';
 
@@ -18,18 +18,18 @@ export default function Species() {
       <Button onPress={() => router.push(`/add?id=${id}` as string)}>Adicionar</Button>
       <Stack.Screen options={{ title: thisSpecies?.Name }} />
 
-      <View>
+      <YStack>
         {thisSpecies &&
           Object.keys(languageDictionary).map((dct) => {
             if (thisSpecies[dct]) {
               return (
                 <Text key={dct}>
-                  <Text>{languageDictionary[dct]}:</Text> {thisSpecies[dct]}
+                  <Text fontWeight="bold">{languageDictionary[dct]}:</Text> {thisSpecies[dct]}
                 </Text>
               );
             }
           })}
-      </View>
+      </YStack>
     </>
   );
 }

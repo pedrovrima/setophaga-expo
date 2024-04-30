@@ -1,7 +1,7 @@
 import { FlashList } from '@shopify/flash-list';
 import { useState } from 'react';
 import { Modal, Pressable, Text, TextInput, View } from 'react-native';
-import { Input, Button } from 'tamagui';
+import { Input, Button, YStack } from 'tamagui';
 
 export default function Select({
   options,
@@ -46,7 +46,7 @@ export default function Select({
         }}
       />
       {optionsOpen && (
-        <View className="h-max-[300px] h-[100px] h-fit">
+        <YStack height={200}>
           <FlashList
             estimatedItemSize={10}
             data={filteredOptions}
@@ -62,7 +62,7 @@ export default function Select({
               </Button>
             )}
           />
-        </View>
+        </YStack>
       )}
     </View>
   );
