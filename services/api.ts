@@ -28,7 +28,6 @@ export const getAccessToken = async (): Promise<SalesforceAccessToken> => {
 };
 
 export const createName = async (data: any) => {
-  console.log('mutation', data);
   const createName = await fetch('/name', {
     method: 'POST',
     headers: {
@@ -36,5 +35,6 @@ export const createName = async (data: any) => {
     },
     body: JSON.stringify(data),
   });
+  console.log(createName);
   return createName;
 };

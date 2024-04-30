@@ -45,21 +45,23 @@ export default function Select({
         }}
       />
       {optionsOpen && (
-        <FlashList
-          estimatedItemSize={20}
-          data={filteredOptions}
-          renderItem={({ item, index }) => (
-            <Pressable
-              key={index}
-              onPress={() => {
-                setOptionsOpen(false);
-                onChange(item);
-                setInputText(item);
-              }}>
-              <Text>{item}</Text>
-            </Pressable>
-          )}
-        />
+        <View className="h-max-[300px] h-[100px] h-fit">
+          <FlashList
+            estimatedItemSize={10}
+            data={filteredOptions}
+            renderItem={({ item, index }) => (
+              <Pressable
+                key={index}
+                onPress={() => {
+                  onChange(item);
+                  setInputText(item);
+                  setOptionsOpen(false);
+                }}>
+                <Text>{item}</Text>
+              </Pressable>
+            )}
+          />
+        </View>
       )}
     </View>
   );

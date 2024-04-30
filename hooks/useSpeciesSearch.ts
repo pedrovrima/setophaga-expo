@@ -54,7 +54,6 @@ export const languageDictionary = {
 export default function useSpeciesSearch(data: BirdRecord[], searchValue: string): HookReturn {
   const [filteredValues, setFilteredValues] = useState<(SearchReturn | string | void)[]>([]);
 
-  console.log(searchValue);
   useEffect(() => {
     if (data && searchValue.length > 3) {
       const queriedData = criterias.reduce(
@@ -89,7 +88,6 @@ export default function useSpeciesSearch(data: BirdRecord[], searchValue: string
         setFilteredValues([]);
         return;
       }
-      console.log(queriedData);
 
       setFilteredValues(queriedData);
       return;

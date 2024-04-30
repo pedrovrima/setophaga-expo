@@ -62,7 +62,6 @@ export const GET = async (): Promise<Response> => {
       }
     );
 
-    console.log(data);
     const returnedData = await data.json();
 
     return Response.json(returnedData.records);

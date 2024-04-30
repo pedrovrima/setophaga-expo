@@ -29,6 +29,7 @@ export interface RequestBody {
 }
 
 export const POST = async (request: Request): Promise<Response> => {
+  console.log('teste');
   const auth = await getAccessToken();
   const url = 'https://evaldo.my.salesforce.com/services/data/v58.0/sobjects/Musk__c/';
 

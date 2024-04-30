@@ -7,6 +7,13 @@ import { Text, TextInput, View } from 'react-native';
 import { Container } from '~/components/Container';
 import useSpeciesSearch from '~/hooks/useSpeciesSearch';
 import useSpeciesData from '~/hooks/useSpeciesData';
+import { Button, Input } from 'react-native-elements';
+
+async function fetchHello() {
+  const response = await fetch('/species');
+  const data = await response.json();
+  console.log(data[0]);
+}
 
 export default function Home() {
   const query = useSpeciesData();
@@ -18,10 +25,10 @@ export default function Home() {
       <Stack.Screen options={{ title: 'Home' }} />
       <Container>
         <View>
-          <TextInput
+          <Input
             onChangeText={(text) => setSerachTerm(text)}
             value={searchTerm}
-            className="w-full border-2 border-cyan-300 bg-white px-2 py-1 text-lg"
+            className="text-md border-black-200 w-full rounded-e-md border-2 bg-white px-2 py-1 focus:ring-slate-50"
           />
         </View>
         <Text>{query.isLoading && 'Loading'}</Text>
@@ -47,9 +54,6 @@ export default function Home() {
             data={results}
           />
         )}
-        <Link href={{ pathname: '/details', params: { name: 'Dan' } }} asChild>
-          {/* <Button onPress={() => {}} title="Show Details" /> */}
-        </Link>
       </Container>
     </>
   );
