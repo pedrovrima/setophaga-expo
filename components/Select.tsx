@@ -1,6 +1,7 @@
 import { FlashList } from '@shopify/flash-list';
 import { useState } from 'react';
 import { Modal, Pressable, Text, TextInput, View } from 'react-native';
+import { Input, Button } from 'tamagui';
 
 export default function Select({
   options,
@@ -26,7 +27,7 @@ export default function Select({
   );
   return (
     <View>
-      <TextInput
+      <Input
         editable={!disabled}
         selectTextOnFocus={!disabled}
         placeholder={placeholder}
@@ -50,7 +51,7 @@ export default function Select({
             estimatedItemSize={10}
             data={filteredOptions}
             renderItem={({ item, index }) => (
-              <Pressable
+              <Button
                 key={index}
                 onPress={() => {
                   onChange(item);
@@ -58,7 +59,7 @@ export default function Select({
                   setOptionsOpen(false);
                 }}>
                 <Text>{item}</Text>
-              </Pressable>
+              </Button>
             )}
           />
         </View>

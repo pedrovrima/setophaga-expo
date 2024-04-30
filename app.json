@@ -3,7 +3,6 @@
     "name": "setophaga-expo",
     "slug": "setophaga-expo",
     "version": "1.0.0",
-
     "scheme": "setophaga-expo",
     "web": {
       "bundler": "metro",
@@ -16,14 +15,13 @@
         {
           "origin": "https://evanbacon.dev/"
         }
-      ]
+      ],
+      "expo-font"
     ],
     "experiments": {
       "typedRoutes": true,
-
       "tsconfigPaths": true
     },
-
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
@@ -32,7 +30,9 @@
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },
-    "assetBundlePatterns": ["**/*"],
+    "assetBundlePatterns": [
+      "**/*"
+    ],
     "ios": {
       "supportsTablet": true
     },

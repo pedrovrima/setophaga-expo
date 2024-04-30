@@ -2,8 +2,8 @@ import { Session } from '@supabase/supabase-js';
 import { useLocalSearchParams } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { useForm, Controller } from 'react-hook-form';
-import { View, Text, TextInput, Button, SafeAreaView } from 'react-native';
-import { setEnabled } from 'react-native/Libraries/Performance/Systrace';
+import { View, Button, SafeAreaView } from 'react-native';
+import { Input, XStack, YStack, Text } from 'tamagui';
 
 import Select from '~/components/Select';
 import Authentication from '~/components/screens/Authentication';
@@ -51,7 +51,7 @@ export default function Details() {
     municipios
       .filter((mun) => mun['UF-sigla'] === watch('state'))
       .map((mun) => mun['municipio-nome']);
-  const onSubmit = (data) => {
+  const onSubmit = (data: any) => {
     // Simulate form submission
     const _data = {
       ...data,
@@ -67,13 +67,13 @@ export default function Details() {
   return (
     <SafeAreaView>
       {session?.user.id ? (
-        <View>
+        <YStack gap="$2" paddingVertical="$4" alignSelf="center" minWidth={700}>
           {/* Form Girdileri */}
           <Controller
             control={control}
             defaultValue={''}
             render={({ field }) => (
-              <TextInput {...field} placeholder="Nome ouvido" onChangeText={field.onChange} />
+              <Input {...field} placeholder="Nome ouvido" onChangeText={field.onChange} />
             )}
             name="name"
             rules={{ required: 'You must enter your name' }}
@@ -84,7 +84,7 @@ export default function Details() {
             control={control}
             defaultValue={''}
             render={({ field }) => (
-              <TextInput {...field} placeholder="Informante" onChangeText={field.onChange} />
+              <Input {...field} placeholder="Informante" onChangeText={field.onChange} />
             )}
             name="informer"
             rules={{ required: 'You must enter your informer' }}
@@ -127,7 +127,7 @@ export default function Details() {
             control={control}
             defaultValue={''}
             render={({ field }) => (
-              <TextInput {...field} placeholder="Localidade" onChangeText={field.onChange} />
+              <Input {...field} placeholder="Localidade" onChangeText={field.onChange} />
             )}
             name="location"
             rules={{ required: 'Descreva a localidade' }}
@@ -135,7 +135,7 @@ export default function Details() {
           {errors.location && <ErrorText>{errors?.location?.message as string}</ErrorText>}
           {/* Submit Butonu */}
           <Button title="Submit" onPress={handleSubmit(onSubmit)} />
-        </View>
+        </YStack>
       ) : (
         <Authentication />
       )}
@@ -144,5 +144,5 @@ export default function Details() {
 }
 
 const ErrorText = ({ children }: { children: React.ReactNode }) => {
-  return <Text className="text-red-500">{children}</Text>;
+  return <Text color={'red'}>{children}</Text>;
 };

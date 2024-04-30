@@ -1,6 +1,6 @@
-import { Link, Stack, useLocalSearchParams } from 'expo-router';
+import { Link, Stack, useLocalSearchParams, router } from 'expo-router';
 import { Text, View, TouchableOpacity } from 'react-native';
-import { Button } from '~/components/Button';
+import { Button } from 'tamagui';
 import useSpeciesData from '~/hooks/useSpeciesData';
 import { languageDictionary } from '~/hooks/useSpeciesSearch';
 
@@ -15,9 +15,7 @@ export default function Species() {
   const thisSpecies = sppDataQuery?.data.find((spp) => '' + spp.Evaldo__c === id);
   return (
     <>
-      <Link className=" w-min" href={`/add?id=${id}` as string}>
-        <Text>Adicionar</Text>
-      </Link>
+      <Button onPress={() => router.push(`/add?id=${id}` as string)}>Adicionar</Button>
       <Stack.Screen options={{ title: thisSpecies?.Name }} />
 
       <View>
@@ -26,7 +24,7 @@ export default function Species() {
             if (thisSpecies[dct]) {
               return (
                 <Text key={dct}>
-                  <Text className="font-bold">{languageDictionary[dct]}:</Text> {thisSpecies[dct]}
+                  <Text>{languageDictionary[dct]}:</Text> {thisSpecies[dct]}
                 </Text>
               );
             }
