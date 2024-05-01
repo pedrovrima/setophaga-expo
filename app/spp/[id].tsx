@@ -14,11 +14,17 @@ export default function Species() {
 
   const thisSpecies = sppDataQuery?.data.find((spp) => '' + spp.Evaldo__c === id);
   return (
-    <>
-      <Button onPress={() => router.push(`/add?id=${id}` as string)}>Adicionar</Button>
+    <YStack paddingVertical="$8">
       <Stack.Screen options={{ title: thisSpecies?.Name }} />
+      <Button
+        marginBottom="$4"
+        marginHorizontal="$4"
+        backgroundColor="slategray"
+        onPress={() => router.push(`/add?id=${id}` as string)}>
+        Adicionar Nome
+      </Button>
 
-      <YStack>
+      <YStack paddingHorizontal="$6">
         {thisSpecies &&
           Object.keys(languageDictionary).map((dct) => {
             if (thisSpecies[dct]) {
@@ -30,6 +36,6 @@ export default function Species() {
             }
           })}
       </YStack>
-    </>
+    </YStack>
   );
 }

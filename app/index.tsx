@@ -1,11 +1,12 @@
 import { useState } from 'react';
 import { FlashList } from '@shopify/flash-list';
 
-import { Stack, Link } from 'expo-router';
-import { Text, Input, XStack, YStack, H4, SizableText } from 'tamagui';
+import { Stack, Link, router } from 'expo-router';
+import { Text, Input, XStack, YStack, H4, SizableText, View, Button } from 'tamagui';
 
 import useSpeciesSearch from '~/hooks/useSpeciesSearch';
 import useSpeciesData from '~/hooks/useSpeciesData';
+import { Pressable } from 'react-native';
 
 export default function Home() {
   const query = useSpeciesData();
@@ -16,8 +17,13 @@ export default function Home() {
     <>
       <Stack.Screen options={{ title: 'Home' }} />
 
-      <YStack padding="$2" maxWidth={600} flex={1}>
-        <Input onChangeText={(text) => setSerachTerm(text)} value={searchTerm} marginBottom="$6" />
+      <YStack padding="$2" maxWidth={600} flex={1} backgroundColor={'$background075'}>
+        <Input
+          borderColor={'$borderColor'}
+          onChangeText={(text) => setSerachTerm(text)}
+          value={searchTerm}
+          marginBottom="$6"
+        />
 
         <Text>{query.isLoading && 'Loading'}</Text>
         {query.data && (
@@ -32,18 +38,21 @@ export default function Home() {
                 );
               }
               return (
-                <Link href={`/spp/${'' + item?.id}`}>
-                  <XStack
-                    paddingHorizontal="$6"
-                    paddingVertical="$2"
-                    backgroundColor={index % 2 ? `#fff` : `#ccc`}
-                    justifyContent="space-between"
-                    width={'100%'}
-                    flex={1}>
-                    <Text>{item?.stringFound}</Text>
-                    <SizableText fontStyle="italic">{item?.scientificName}</SizableText>
-                  </XStack>
-                </Link>
+                <Button
+                  onPress={() => router.push(`spp/${item.id}`)}
+                  width={'100%'}
+                  alignSelf="stretch"
+                  paddingHorizontal="$2"
+                  paddingVertical="$2"
+                  backgroundColor={index % 2 ? `#fff` : `#ccc`}
+                  justifyContent="space-between"
+                  borderRadius={0}
+                  display="flex">
+                  <Text flex={1.5}>{item?.stringFound}</Text>
+                  <Text flex={2} fontStyle="italic">
+                    {item?.scientificName}
+                  </Text>
+                </Button>
               );
             }}
             data={results}
