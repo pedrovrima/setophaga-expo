@@ -2,8 +2,9 @@ import { Session } from '@supabase/supabase-js';
 import { useLocalSearchParams } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { useForm, Controller } from 'react-hook-form';
-import { View, SafeAreaView } from 'react-native';
+import { View, SafeAreaView, Alert } from 'react-native';
 import { Input, XStack, YStack, Text, Button, H3 } from 'tamagui';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 import Select from '~/components/Select';
 import Authentication from '~/components/screens/Authentication';
@@ -52,7 +53,19 @@ export default function Details() {
       .filter((mun) => mun['UF-sigla'] === watch('state'))
       .map((mun) => mun['municipio-nome']);
   const onSubmit = (data: any) => {
-    // Simulate form submission
+    if (navigator.onLine === false) {
+      const dataToSave = {
+        ...getValues(),
+        id: thisSpp?.Id,
+        collectorsId: session?.user.id,
+        collectorsName:
+          session?.user.user_metadata.firstName + ' ' + session?.user.user_metadata.lastName,
+      };
+      AsyncStorage.setItem(id, JSON.stringify(dataToSave)).then(() => {
+        Alert.alert('Atenção', 'Dados salvos para envio posterior');
+      });
+    }
+
     const _data = {
       ...data,
       id: thisSpp?.Id,

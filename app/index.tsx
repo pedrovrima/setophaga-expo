@@ -40,7 +40,7 @@ export default function Home() {
               return (
                 <Button
                   onPress={() => router.push(`spp/${item.id}`)}
-                  width={'100%'}
+                  width="100%"
                   alignSelf="stretch"
                   paddingHorizontal="$2"
                   paddingVertical="$2"
