@@ -238,6 +238,12 @@ export default function Profile() {
                 <Text>Nenhum dado salvo</Text>
               )}
             </YStack>
+            <YStack marginTop={'$8'}>
+              <H3>Ficha Técnia</H3>
+              <Text>Idealizado por: Guto Carvalho</Text>
+              <Text>Desenvolvimento: Evaldo Césari e Pedro Martins</Text>
+              <Text>Design: Julia Morena e Pedro Martins</Text>
+            </YStack>
           </YStack>
         ) : (
           <Authentication />
