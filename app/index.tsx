@@ -27,12 +27,7 @@ export default function Home() {
 
   return (
     <>
-      <YStack
-        paddingHorizontal={20}
-        paddingTop={60}
-        maxWidth={600}
-        flex={1}
-        backgroundColor={'#FFFBF7'}>
+      <YStack paddingHorizontal={20} paddingTop={60} flex={1} backgroundColor={'#FFFBF7'}>
         <View alignItems="center" marginBottom="$4">
           <Stack.Screen options={{ title: 'Home', headerShown: false }} />
           <Image source={require('../assets/logo.png')} height={48} width={140} />
