@@ -6,7 +6,6 @@ import { Dimensions, Alert } from 'react-native';
 import { View, Input, XStack, YStack, Text, Button, H3, Label } from 'tamagui';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
-import { getNetworkStateAsync } from 'expo-network';
 
 import Select from '~/components/Select';
 import Authentication from '~/components/screens/Authentication';
@@ -83,20 +82,20 @@ export default function Details() {
     watch,
   } = useForm();
   const onSubmit = async (data: any) => {
-    try {
-      const status = await getNetworkStateAsync();
-      console.log(status, 'status');
-    } catch (e) {
-      console.log(e);
-    }
+    // try {
+    //   const status = await getNetworkStateAsync();
+    //   console.log(status, 'status');
+    // } catch (e) {
+    //   console.log(e);
+    // }
 
-    const dataToSave = {
-      ...getValues(),
-      id: thisSpp?.Id,
-      collectorsId: session?.user.id,
-      collectorsName:
-        session?.user.user_metadata.firstName + ' ' + session?.user.user_metadata.lastName,
-    };
+    // const dataToSave = {
+    //   ...getValues(),
+    //   id: thisSpp?.Id,
+    //   collectorsId: session?.user.id,
+    //   collectorsName:
+    //     session?.user.user_metadata.firstName + ' ' + session?.user.user_metadata.lastName,
+    // };
 
     // AsyncStorage.getItem('offlineData').then((data) => {
     //   const offlineData = data ? JSON.parse(data) : [];
