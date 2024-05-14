@@ -7,7 +7,7 @@
     "web": {
       "bundler": "metro",
       "output": "server",
-      "favicon": "./assets/icon.png"
+      "favicon": "./assets/adaptive-icon.png"
     },
     "plugins": [
       [

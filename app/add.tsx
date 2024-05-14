@@ -89,13 +89,13 @@ export default function Details() {
     //   console.log(e);
     // }
 
-    const dataToSave = {
-      ...getValues(),
-      id: thisSpp?.Id,
-      collectorsId: session?.user.id,
-      collectorsName:
-        session?.user.user_metadata.firstName + ' ' + session?.user.user_metadata.lastName,
-    };
+    // const dataToSave = {
+    //   ...getValues(),
+    //   id: thisSpp?.Id,
+    //   collectorsId: session?.user.id,
+    //   collectorsName:
+    //     session?.user.user_metadata.firstName + ' ' + session?.user.user_metadata.lastName,
+    // };
 
     // AsyncStorage.getItem('offlineData').then((data) => {
     //   const offlineData = data ? JSON.parse(data) : [];
