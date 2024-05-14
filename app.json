@@ -7,7 +7,7 @@
     "web": {
       "bundler": "metro",
       "output": "server",
-      "favicon": "./assets/icon.png"
+      "favicon": "./assets/adaptive-icon.png"
     },
     "plugins": [
       [
@@ -23,7 +23,7 @@
       "tsconfigPaths": true
     },
     "orientation": "portrait",
-    "icon": "./assets/icon.png",
+    "icon": "./assets/adaptive-icon.png",
     "userInterfaceStyle": "light",
     "splash": {
       "image": "./assets/splash.png",
