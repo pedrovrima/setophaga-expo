@@ -165,7 +165,7 @@ export default function Species() {
                     {thisSpecies.sinom
                       .sort((a, b) => a.Name.localeCompare(b.Name))
                       .map((sin) => (
-                        <Text fontSize={18} lineHeight={20}>
+                        <Text key={sin.ColetorId__c + sin.Name} fontSize={18} lineHeight={20}>
                           {`${sin.Name} (${sin.Regiao__c})`}
                         </Text>
                       ))}

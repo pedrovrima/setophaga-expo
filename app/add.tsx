@@ -6,7 +6,7 @@ import { Dimensions, Alert } from 'react-native';
 import { View, Input, XStack, YStack, Text, Button, H3, Label } from 'tamagui';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
-import { getNetworkStateAsync } from 'expo-network';
+import { NetworkStateType, getNetworkStateAsync } from 'expo-network';
 
 import Select from '~/components/Select';
 import Authentication from '~/components/screens/Authentication';
@@ -83,25 +83,28 @@ export default function Details() {
     watch,
   } = useForm();
   const onSubmit = async (data: any) => {
-    try {
-      const status = await getNetworkStateAsync();
-      console.log(status, 'status');
-    } catch (e) {
-      console.log(e);
+    const networkStatus = await getNetworkStateAsync();
+
+    if (!networkStatus.isConnected) {
+      const dataToSave = {
+        ...getValues(),
+        id: thisSpp?.Id,
+        collectorsId: session?.user.id,
+        collectorsName:
+          session?.user.user_metadata.firstName + ' ' + session?.user.user_metadata.lastName,
+      };
+
+      AsyncStorage.getItem('offlineData').then((data) => {
+        const offlineData = data ? JSON.parse(data) : [];
+        AsyncStorage.setItem('offlineData', JSON.stringify([...offlineData, dataToSave]));
+      });
+
+      Alert.alert('Offline', 'Seu registro foi salvo para ser enviado posteriormente', [
+        { text: 'OK', onPress: () => router.replace(`/spp/${id}`) },
+      ]);
+
+      return;
     }
-
-    // const dataToSave = {
-    //   ...getValues(),
-    //   id: thisSpp?.Id,
-    //   collectorsId: session?.user.id,
-    //   collectorsName:
-    //     session?.user.user_metadata.firstName + ' ' + session?.user.user_metadata.lastName,
-    // };
-
-    // AsyncStorage.getItem('offlineData').then((data) => {
-    //   const offlineData = data ? JSON.parse(data) : [];
-    //   AsyncStorage.setItem('offlineData', JSON.stringify([...offlineData, dataToSave]));
-    // });
 
     const _data = {
       ...data,
@@ -114,7 +117,9 @@ export default function Details() {
     const mutation = createNameMutations.mutate(_data);
   };
 
-  useEffect(() => {}, [createNameMutations.isError]);
+  useEffect(() => {
+    Alert.alert('Erro', 'Erro ao cadastrar sinônimo, tente novamente mais tarde');
+  }, [createNameMutations.isError]);
 
   useEffect(() => {
     if (createNameMutations.data?.status === 409) {

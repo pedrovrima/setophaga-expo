@@ -7,7 +7,7 @@
     "web": {
       "bundler": "metro",
       "output": "server",
-      "favicon": "./assets/adaptive-icon.png"
+      "favicon": "./assets/icon.png"
     },
     "plugins": [
       [
@@ -23,10 +23,10 @@
       "tsconfigPaths": true
     },
     "orientation": "portrait",
-    "icon": "./assets/adaptive-icon.png",
+    "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
     "splash": {
-      "image": "./assets/splash.png",
+      "image": "./assets/xara-splash.png",
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },
@@ -38,7 +38,7 @@
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./assets/adaptive-icon.png",
+        "foregroundImage": "./assets/icon.png",
         "backgroundColor": "#ffffff"
       },
       "package": "com.pedrovrima.setophagaexpo"

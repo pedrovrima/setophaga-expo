@@ -16,7 +16,7 @@ export default function Menu({ show }: { show: boolean }) {
       justifyContent="space-between">
       <Button
         onPress={() => {
-          router.push('/search');
+          router.push('/');
         }}
         backgroundColor={'transparent'}>
         <YStack gap={'$1'} flexDirection="column">

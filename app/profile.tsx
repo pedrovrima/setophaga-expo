@@ -3,7 +3,19 @@ import { useLocalSearchParams, Stack, router } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { useForm, Controller, set } from 'react-hook-form';
 import { Dimensions, Alert } from 'react-native';
-import { View, Input, XStack, YStack, Text, Button, H3, Label, Spinner } from 'tamagui';
+import {
+  View,
+  Input,
+  XStack,
+  YStack,
+  Text,
+  Button,
+  H3,
+  Label,
+  Spinner,
+  Image,
+  ScrollView,
+} from 'tamagui';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 
@@ -13,7 +25,7 @@ import useCreateName from '~/hooks/useCreateName';
 import useSpeciesData from '~/hooks/useSpeciesData';
 import { municipios } from '~/municipios.json';
 import { supabase } from '~/services/supabase';
-import { ScreenHeight } from 'react-native-elements/dist/helpers';
+import { ScreenHeight, ScreenWidth } from 'react-native-elements/dist/helpers';
 import { Icon } from 'react-native-elements';
 import LoadingDialog from '~/components/LoadingDialog';
 import { useQuery } from '@tanstack/react-query';
@@ -89,41 +101,8 @@ export default function Profile() {
   //   states &&
   //   municipios.filter((mun) => mun['UF-sigla'] === state).map((mun) => mun['municipio-nome']);
 
-  const onSubmit = async (data: any) => {
-    if (navigator.onLine === false) {
-      const dataToSave = {
-        ...getValues(),
-        id: thisSpp?.Id,
-        collectorsId: session?.user.id,
-        collectorsName:
-          session?.user.user_metadata.firstName + ' ' + session?.user.user_metadata.lastName,
-      };
-      AsyncStorage.setItem(id, JSON.stringify(dataToSave)).then(() => {
-        Alert.alert('Atenção', 'Dados salvos para envio posterior');
-      });
-    }
-
-    const _data = {
-      ...data,
-      id: thisSpp?.Id,
-      collectorsId: session?.user.id,
-      collectorsName:
-        session?.user.user_metadata.firstName + ' ' + session?.user.user_metadata.lastName,
-    };
-
-    const mutation = createNameMutations.mutate(_data);
-  };
-
-  useEffect(() => {
-    async function getOfflineData() {
-      const dadosSalvos = await AsyncStorage.getItem('offlineData');
-      console.log(dadosSalvos);
-    }
-    getOfflineData();
-  }, []);
-
   return (
-    <View marginBottom={80} backgroundColor={'#FFFBF7'} paddingTop={60} paddingHorizontal={12}>
+    <ScrollView backgroundColor={'#FFFBF7'} paddingTop={60} paddingHorizontal={12}>
       <LoadingDialog loading={createNameMutations.isPending} />
       <Stack.Screen options={{ headerShown: false }} />
 
@@ -160,9 +139,9 @@ export default function Profile() {
               }}>
               Sair
             </Button>
-            <YStack marginTop={'$8'}>
+            <YStack marginTop={'$8'} marginBottom={'$8'}>
               <H3>Dados Salvos</H3>
-              {offlineData.isLoading || speciesData.isLoading ? (
+              {offlineData.isPending || speciesData.isLoading ? (
                 <Spinner />
               ) : offlineData?.data?.length > 0 ? (
                 <>
@@ -238,8 +217,22 @@ export default function Profile() {
                 <Text>Nenhum dado salvo</Text>
               )}
             </YStack>
-            <YStack marginTop={'$8'}>
+            <YStack>
               <H3>Ficha Técnia</H3>
+
+              <YStack paddingHorizontal={20} gap="$1" alignItems="flex-start" width={ScreenWidth}>
+                <Text marginBottom="0">Realização</Text>
+                <XStack
+                  alignItems="center"
+                  justifyContent="space-around"
+                  gap={'$2'}
+                  marginBottom={'$4'}>
+                  <Image source={require('../assets/avistar.png')} height={50} width={100} />
+
+                  <Image source={require('../assets/oama.png')} height={50} width={90} />
+                  <Image source={require('../assets/evaldo.png')} height={60} width={60} />
+                </XStack>
+              </YStack>
               <Text>Idealizado por: Guto Carvalho</Text>
               <Text>Desenvolvimento: Evaldo Césari e Pedro Martins</Text>
               <Text>Design: Julia Morena e Pedro Martins</Text>
@@ -249,7 +242,7 @@ export default function Profile() {
           <Authentication />
         )}
       </KeyboardAwareScrollView>
-    </View>
+    </ScrollView>
   );
 }
 

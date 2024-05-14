@@ -77,7 +77,7 @@ export const GET = async (): Promise<Response> => {
     );
 
     const sinom = await fetch(
-      'https://evaldo.my.salesforce.com/services/data/v60.0/query?q=SELECT%20Approval_status__c%2C%20Ave__c%2C%20ColetorId__c%2C%20ColetorName__c%2C%20Estado__c%2C%20Municipio__c%2C%20Name%2C%20QuemInformou__c%2C%20Regiao__c%20FROM%20Musk__c',
+      "https://evaldo.my.salesforce.com/services/data/v60.0/query?q=SELECT+Id%2C+Approval_status__c%2C+Ave__c%2C+ColetorId__c%2C+ColetorName__c%2C+Estado__c%2C+Municipio__c%2C+Name%2C+QuemInformou__c%2C+Regiao__c+FROM+Musk__c+WHERE+Approval_status__c%3D'Aprovado'",
       {
         method: 'GET',
         headers: {

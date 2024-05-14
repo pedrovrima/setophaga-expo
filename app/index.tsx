@@ -54,9 +54,9 @@ export default function Home() {
             top={15}
           />
         </View>
-        {searchTerm.length > 3 ? (
+        {searchTerm.length > 3 && (
           <>
-            {results?.length > 0 ? (
+            {results?.length! > 0 ? (
               <FlashList
                 estimatedItemSize={20}
                 renderItem={({ item, index }) => {
@@ -97,20 +97,6 @@ export default function Home() {
               <Text marginTop={'$4'}>Nenhum resultado encontrado</Text>
             )}
           </>
-        ) : (
-          <YStack
-            paddingHorizontal={20}
-            marginTop={ScreenHeight - 420}
-            gap="$2"
-            alignItems="center"
-            width={ScreenWidth}>
-            <Text marginBottom="0">Oferecimento</Text>
-            <XStack alignItems="center" justifyContent="space-around" paddingHorizontal={'$6'}>
-              <Image source={require('../assets/avistar.png')} height={50} width={100} />
-
-              <Image source={require('../assets/oama.png')} height={50} width={90} />
-            </XStack>
-          </YStack>
         )}
       </YStack>
     </>
