@@ -14,6 +14,7 @@ export type HookReturn = [(SearchReturn | string | void)[] | undefined, boolean]
 
 const criterias = [
   'NVP__c',
+  'sinom',
   'USName__c',
   'Spanish__c',
   'Danish__c',
@@ -34,6 +35,7 @@ const criterias = [
 export const languageDictionary = {
   Name: 'Nome Cientifico',
   NVP__c: 'CBRO',
+  sinom: 'Nomes Populares',
   USName__c: 'English',
   Spanish__c: 'Español',
   Danish__c: 'Dansk',
@@ -56,9 +58,15 @@ export default function useSpeciesSearch(data: BirdRecord[], searchValue: string
 
   useEffect(() => {
     if (data && searchValue.length > 3) {
+      console.log('searching')
       const queriedData = criterias.reduce(
         (container: (SearchReturn | string)[], crt: Criteria) => {
           const _returnedData = data.filter((value) => {
+            if(crt === 'sinom') {
+              return value[crt]?.some((sin) => sin.Name.toLowerCase().includes(searchValue.toLowerCase()));
+            }
+
+
             if (crt === 'NVP__c') {
               return (
                 value[crt]?.toLocaleLowerCase().includes(searchValue.toLowerCase()) ||
@@ -73,7 +81,7 @@ export default function useSpeciesSearch(data: BirdRecord[], searchValue: string
             const returnedData = _returnedData.map((dt) => ({
               id: dt.Evaldo__c,
               scientificName: dt.Name,
-              stringFound: dt[crt],
+              stringFound: crt === 'sinom'?  dt[crt].find((sin) => sin.Name.toLowerCase().includes(searchValue.toLowerCase()))?.Name : dt[crt],
             }));
 
             return [...container, languageDictionary[crt], ...returnedData];

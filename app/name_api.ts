@@ -28,12 +28,15 @@ export interface RequestBody {
   name: string;
 }
 
-export const POST = async (request: Request): Promise<Response> => {
-  console.log('teste');
+  export const POST = async (request: Request): Promise<Response> => {
+
+    try{
   const auth = await getAccessToken();
   const url = 'https://evaldo.my.salesforce.com/services/data/v58.0/sobjects/Musk__c/';
 
   const body = (await request.json()) as RequestBody;
+
+
 
   const data = {
     Ave__c: body.id,
@@ -54,7 +57,26 @@ export const POST = async (request: Request): Promise<Response> => {
     ],
   };
 
-  console.log(auth, data);
+
+  const search = await fetch(
+    'https://evaldo.my.salesforce.com/services/data/v58.0/query?q=SELECT+Id+FROM+Musk__c+WHERE+Name+=+' +
+      `'${body.name}'&Ave__c=${body.id}&Municipio__c=${body.city}&Estado__c=${body.state}`,
+      {
+        method: 'GET',
+        headers: {
+          Authorization: `Bearer ${auth?.access_token}`,
+        },
+      }
+  );
+
+  const searchResponse = await search.json();
+
+  if(searchResponse.totalSize > 0) {  
+    console.log('Registro já existe')
+    return new Response('Registro já existe', { status: 409 });
+  }
+
+
   const postData = {
     method: 'POST',
     headers: {
@@ -65,6 +87,10 @@ export const POST = async (request: Request): Promise<Response> => {
   };
 
   const response = await fetch(url, postData);
-  console.log(response);
+
   return response;
+} catch (error) {
+  console.log(error);
+  return new Response('Erro ao cadastrar', { status: 500 });
+}
 };

@@ -1,8 +1,11 @@
 import React, { useState } from 'react';
-import { Alert, StyleSheet, View, AppState } from 'react-native';
-import { Button, Input } from 'react-native-elements';
+import { Alert, StyleSheet, View, AppState, Dimensions } from 'react-native';
+import { Button, Input, Image, Label } from 'tamagui';
 
 import { supabase } from '../../services/supabase';
+import { YStack } from 'tamagui';
+import SignIn from '../SignIn';
+import SignUp from '../SignUp';
 
 // Tells Supabase Auth to continuously refresh the session automatically if
 // the app is in the foreground. When this is added, you will continue to receive
@@ -17,100 +20,81 @@ AppState.addEventListener('change', (state) => {
 });
 
 export default function Authentication() {
-  const [email, setEmail] = useState('');
-  const [firstName, setFirstName] = useState('');
-  const [lastName, setLastName] = useState('');
+  let ScreenHeight = Dimensions.get('window').height;
 
-  const [password, setPassword] = useState('');
-  const [loading, setLoading] = useState(false);
+  const [type, setType] = useState('');
 
-  async function signInWithEmail() {
-    setLoading(true);
-    const { error } = await supabase.auth.signInWithPassword({
-      email: email,
-      password: password,
-    });
-
-    console.log('error', error);
-
-    if (error) Alert.alert(error.message);
-    setLoading(false);
+  if (type === '') {
+    return (
+      <YStack
+        height={ScreenHeight}
+        marginTop={60}
+        alignItems="center"
+        justifyContent="flex-start"
+        backgroundColor={'#FFFBF7'}
+        gap={'$8'}>
+        <Image source={require('../../assets/logo.png')} height={48 * 2} width={140 * 2} />
+        <YStack gap={'$4'}>
+          <Button
+            borderRadius="$12"
+            color={'#FFF'}
+            paddingHorizontal={24}
+            paddingVertical={10}
+            fontSize={14}
+            fontWeight={'bold'}
+            width={'$20'}
+            backgroundColor="#6750A4"
+            onPress={() => setType('signin')}>
+            {' '}
+            Entrar{' '}
+          </Button>
+          <Button
+            borderRadius="$12"
+            color={'#FFF'}
+            paddingHorizontal={24}
+            paddingVertical={10}
+            fontSize={14}
+            fontWeight={'bold'}
+            width={'$20'}
+            backgroundColor="#6750A4"
+            onPress={() => setType('signup')}>
+            {' '}
+            Cadastrar{' '}
+          </Button>
+        </YStack>
+      </YStack>
+    );
   }
 
-  async function signUpWithEmail() {
-    setLoading(true);
-    const {
-      data: { session },
-      error,
-    } = await supabase.auth.signUp({
-      email: email,
-      password: password,
-      options: {
-        data: {
-          firstName,
-          lastName,
-        },
-      },
-    });
-
-    if (error) Alert.alert(error.message);
-    if (!session) Alert.alert('Please check your inbox for email verification!');
-    setLoading(false);
+  if (type === 'signin') {
+    return (
+      <YStack
+        height={ScreenHeight}
+        marginTop={60}
+        alignItems="center"
+        justifyContent="flex-start"
+        backgroundColor={'#FFFBF7'}
+        gap={'$8'}>
+        <Image source={require('../../assets/logo.png')} height={48 * 2} width={140 * 2} />
+        <SignIn setType={setType} />
+      </YStack>
+    );
   }
 
-  return (
-    <View style={styles.container}>
-      <View style={[styles.verticallySpaced, styles.mt20]}>
-        <Input
-          label="First Name"
-          leftIcon={{ type: 'font-awesome', name: 'user' }}
-          onChangeText={(text) => setFirstName(text)}
-          value={firstName}
-          placeholder="Helmut"
-          autoCapitalize={'words'}
-        />
-      </View>
-      <View style={[styles.verticallySpaced, styles.mt20]}>
-        <Input
-          label="Last Name"
-          leftIcon={{ type: 'font-awesome', name: 'user' }}
-          onChangeText={(text) => setLastName(text)}
-          value={lastName}
-          placeholder="Sick"
-          autoCapitalize={'words'}
-        />
-      </View>
-
-      <View style={[styles.verticallySpaced, styles.mt20]}>
-        <Input
-          label="Email"
-          leftIcon={{ type: 'font-awesome', name: 'envelope' }}
-          onChangeText={(text) => setEmail(text)}
-          value={email}
-          placeholder="email@address.com"
-          autoCapitalize={'none'}
-        />
-      </View>
-
-      <View style={styles.verticallySpaced}>
-        <Input
-          label="Password"
-          leftIcon={{ type: 'font-awesome', name: 'lock' }}
-          onChangeText={(text) => setPassword(text)}
-          value={password}
-          secureTextEntry={true}
-          placeholder="Password"
-          autoCapitalize={'none'}
-        />
-      </View>
-      <View style={[styles.verticallySpaced, styles.mt20]}>
-        <Button title="Sign in" disabled={loading} onPress={() => signInWithEmail()} />
-      </View>
-      <View style={styles.verticallySpaced}>
-        <Button title="Sign up" disabled={loading} onPress={() => signUpWithEmail()} />
-      </View>
-    </View>
-  );
+  if (type === 'signup') {
+    return (
+      <YStack
+        height={ScreenHeight}
+        marginTop={60}
+        alignItems="center"
+        justifyContent="flex-start"
+        backgroundColor={'#FFFBF7'}
+        gap={'$8'}>
+        <Image source={require('../../assets/logo.png')} height={48 * 2} width={140 * 2} />
+        <SignUp setType={setType} />
+      </YStack>
+    );
+  }
 }
 
 const styles = StyleSheet.create({
