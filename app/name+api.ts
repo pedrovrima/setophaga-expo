@@ -28,8 +28,9 @@ export interface RequestBody {
   name: string;
 }
 
-export const POST = async (request: Request): Promise<Response> => {
+  export const POST = async (request: Request): Promise<Response> => {
 
+    try{
   const auth = await getAccessToken();
   const url = 'https://evaldo.my.salesforce.com/services/data/v58.0/sobjects/Musk__c/';
 
@@ -88,4 +89,8 @@ export const POST = async (request: Request): Promise<Response> => {
   const response = await fetch(url, postData);
 
   return response;
+} catch (error) {
+  console.log(error);
+  return new Response('Erro ao cadastrar', { status: 500 });
+}
 };
