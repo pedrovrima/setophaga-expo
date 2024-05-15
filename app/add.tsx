@@ -118,7 +118,9 @@ export default function Details() {
   };
 
   useEffect(() => {
-    Alert.alert('Erro', 'Erro ao cadastrar sinônimo, tente novamente mais tarde');
+    if (createNameMutations.isError) {
+      Alert.alert('Erro', 'Erro ao cadastrar sinônimo, tente novamente mais tarde');
+    }
   }, [createNameMutations.isError]);
 
   useEffect(() => {

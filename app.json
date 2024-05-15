@@ -1,8 +1,8 @@
 {
   "expo": {
-    "name": "setophaga-expo",
+    "name": "Xará",
     "slug": "setophaga-expo",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "scheme": "setophaga-expo",
     "web": {
       "bundler": "metro",
@@ -37,6 +37,7 @@
       "supportsTablet": true
     },
     "android": {
+      "versionCode": 1.1,
       "adaptiveIcon": {
         "foregroundImage": "./assets/icon.png",
         "backgroundColor": "#ffffff"
