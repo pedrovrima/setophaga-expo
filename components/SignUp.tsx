@@ -74,12 +74,12 @@ export default function SignUp({ setType }: { setType: (type: string) => void })
                 </Text>
               </View>
             )}
-            name="lastname"
+            name="lastName"
             rules={{
               required: 'Obrigatório',
             }}
           />
-          {errors.lastname && <ErrorText>{errors?.lastname?.message as string}</ErrorText>}
+          {errors.lastName && <ErrorText>{errors?.lastName?.message as string}</ErrorText>}
         </YStack>
         <YStack justifyContent="flex-start">
           <Controller
@@ -123,6 +123,7 @@ export default function SignUp({ setType }: { setType: (type: string) => void })
                 <Input
                   width={'$20'}
                   secureTextEntry={true}
+                  textContentType="password"
                   {...field}
                   placeholder="Senha"
                   onChangeText={field.onChange}
@@ -141,7 +142,10 @@ export default function SignUp({ setType }: { setType: (type: string) => void })
               </View>
             )}
             name="password"
-            rules={{ required: 'Obrigatório' }}
+            rules={{
+              required: 'Obrigatório',
+              minLength: { value: 6, message: 'Mínimo de 6 caracteres' },
+            }}
           />
           {errors.password && <ErrorText>{errors?.password?.message as string}</ErrorText>}
         </YStack>
@@ -157,26 +161,28 @@ export default function SignUp({ setType }: { setType: (type: string) => void })
           onPress={handleSubmit(async (data) => {
             const { email, password, name, lastName } = data;
             setLoading(true);
-            const { error } = await supabase.auth
+            await supabase.auth
               .signUp({
                 email: email,
                 password: password,
                 options: {
                   data: {
-                    first_name: name,
-                    last_name: lastName,
+                    firstName: name,
+                    lastName,
                   },
                 },
               })
               .then(({}) => {
                 setLoading(false);
                 Alert.alert('Success', 'Cheque seu email para confirmar sua conta');
-              });
-            if (error) {
-              if (error) Alert.alert(error.message);
+              })
+              .catch((error) => {
+                if (error) {
+                  if (error) Alert.alert(error.message);
 
-              console.error('error', error);
-            }
+                  console.error('error', error);
+                }
+              });
           })}>
           Cadastrar
         </Button>
