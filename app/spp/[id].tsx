@@ -151,7 +151,7 @@ export default function Species() {
         <YStack>
           {thisSpecies &&
             Object.keys(languageDictionary).map((dct) => {
-              if (thisSpecies[dct] && dct === 'sinom') {
+              if (thisSpecies[dct]?.length > 0 && dct === 'sinom') {
                 return (
                   <View
                     key={dct}

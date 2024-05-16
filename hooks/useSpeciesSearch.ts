@@ -58,22 +58,22 @@ export default function useSpeciesSearch(data: BirdRecord[], searchValue: string
 
   useEffect(() => {
     if (data && searchValue.length > 3) {
-      console.log('searching')
+      console.log(normalizeName('saíra'))
       const queriedData = criterias.reduce(
         (container: (SearchReturn | string)[], crt: Criteria) => {
           const _returnedData = data.filter((value) => {
             if(crt === 'sinom') {
-              return value[crt]?.some((sin) => sin.Name.toLowerCase().includes(searchValue.toLowerCase()));
+              return value[crt]?.some((sin) => normalizeName(sin.Name.toLowerCase())?.includes(normalizeName(searchValue.toLowerCase())));
             }
 
 
             if (crt === 'NVP__c') {
               return (
-                value[crt]?.toLocaleLowerCase().includes(searchValue.toLowerCase()) ||
-                value['Name']?.toLocaleLowerCase().includes(searchValue.toLowerCase())
+                normalizeName(value[crt]?.toLocaleLowerCase())?.includes(normalizeName(searchValue.toLowerCase())) ||
+                normalizeName(value['Name']?.toLocaleLowerCase())?.includes(normalizeName(searchValue.toLowerCase()))
               );
             } else {
-              return value[crt]?.toLocaleLowerCase().includes(searchValue.toLowerCase());
+              return normalizeName(value[crt]?.toLocaleLowerCase())?.includes(normalizeName(searchValue.toLowerCase()));
             }
           });
 
@@ -121,3 +121,24 @@ const searchByCriteria = (
     };
   }
 };
+
+
+function normalizeName(str:string)
+{
+  if(str){
+    str = str.replace(/[ÀÁÂÃÄÅ]/,"A");
+    str = str.replace(/[àáâãäå]/,"a");
+    str = str.replace(/[í]/,"i");
+    str = str.replace(/[Í]/,"I");
+    str = str.replace(/[óôõ]/,"o");
+    str = str.replace(/[ÓÔÕ]/,"O");
+    str = str.replace(/[ú]/,"u");
+    str = str.replace(/[Ú]/,"U");
+    str = str.replace(/[èéêë]/,"e");
+    str = str.replace(/[ÈÉÊË]/,"E");
+    str = str.replace(/[Ç]/,"C");
+    str = str.replace(/[ç]/,"c");
+    str = str.replace(/[-]/," ");
+    return str.replace(/[^a-z0-9]/gi,''); }
+    return str
+}
