@@ -23,12 +23,12 @@
       "tsconfigPaths": true
     },
     "orientation": "portrait",
-    "icon": "./assets/icon.png",
+    "icon": "./assets/icon-borda.png",
     "userInterfaceStyle": "light",
     "splash": {
       "image": "./assets/xara-splash.png",
       "resizeMode": "contain",
-      "backgroundColor": "#ffffff"
+      "backgroundColor": "#FFFBF7"
     },
     "assetBundlePatterns": [
       "**/*"
@@ -37,10 +37,10 @@
       "supportsTablet": true
     },
     "android": {
-      "versionCode": 3,
+      "versionCode": 4,
       "adaptiveIcon": {
-        "foregroundImage": "./assets/icon.png",
-        "backgroundColor": "#ffffff"
+        "foregroundImage": "./assets/icon-borda.png",
+        "backgroundColor": "#FFFBF7"
       },
       "package": "com.pedrovrima.setophagaexpo"
     },
