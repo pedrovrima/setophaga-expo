@@ -3,7 +3,7 @@ import { useLocalSearchParams, Stack, router } from 'expo-router';
 import { useEffect, useState, useCallback } from 'react';
 import { useForm, Controller, set } from 'react-hook-form';
 import { Dimensions, Alert } from 'react-native';
-import { View, Input, XStack, YStack, Text, Button, H3, Label } from 'tamagui';
+import { View, Input, XStack, YStack, Text, Button, H3, Label, TextArea } from 'tamagui';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 import { NetworkStateType, getNetworkStateAsync } from 'expo-network';
@@ -148,7 +148,7 @@ export default function Details() {
           Cadastrar sinônimo
         </Text>
       </XStack>
-      <KeyboardAwareScrollView scrollEnabled={false}>
+      <KeyboardAwareScrollView>
         {session?.user.id || loading ? (
           <YStack
             height={ScreenHeight}
@@ -311,6 +311,41 @@ export default function Details() {
                 </Text>
               </YStack>
               {errors.location && <ErrorText>{errors?.location?.message as string}</ErrorText>}
+            </YStack>
+            <YStack>
+              <YStack>
+                <Controller
+                  control={control}
+                  defaultValue={''}
+                  render={({ field }) => (
+                    <View position="relative">
+                      <TextArea
+                        borderColor={'#79747E'}
+                        {...field}
+                        placeholder="Algo mais que deseja adicionar?"
+                        onChangeText={field.onChange}
+                        paddingVertical={12}
+                        paddingLeft={16}
+                        backgroundColor={'transparent'}
+                        placeholderTextColor={'#1D1B20'}
+                      />
+                      <Text
+                        position="absolute"
+                        top={-8}
+                        left={12}
+                        fontSize={12}
+                        color={'#49454F'}
+                        backgroundColor={'#FEF7FF'}>
+                        Comentário
+                      </Text>
+                    </View>
+                  )}
+                  name="observation"
+                />
+              </YStack>
+              {errors.observation && (
+                <ErrorText>{errors?.observation?.message as string}</ErrorText>
+              )}
             </YStack>
             {/* Submit Butonu */}
             <XStack gap={8}>

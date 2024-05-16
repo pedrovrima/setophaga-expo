@@ -9,8 +9,9 @@ export default function useSpeciesData() {
   const query = useQuery({
     queryKey: ['allSpp'],
     queryFn: getAllSpecies,
-    refetchInterval: 300000,
     refetchOnMount: false,
+    refetchOnWindowFocus: false,
+    staleTime: 1000 * 60 * 60 * 24,
   });
   const [storedData, setStoredData] = useState(undefined);
   useEffect(() => {

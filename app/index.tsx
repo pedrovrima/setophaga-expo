@@ -32,9 +32,9 @@ export default function Home() {
           <Stack.Screen options={{ title: 'Home', headerShown: false }} />
           <Image source={require('../assets/logo.png')} height={48} width={140} />
         </View>
+        <Text textAlign="center">popular - vernáculo - científico</Text>
         <Text textAlign="center" marginBottom={40}>
-          Descubra e registre os nomes de pássaros em várias línguas, explore suas origens e
-          contribua!
+          Registre e pesquise nomes de Pássaros
         </Text>
         <View borderRadius={'$12'} overflow="hidden">
           <Input
@@ -56,7 +56,7 @@ export default function Home() {
         </View>
         {searchTerm.length > 3 && (
           <>
-            {results?.length! > 0 ? (
+            {results?.length > 0 ? (
               <FlashList
                 estimatedItemSize={20}
                 renderItem={({ item, index }) => {

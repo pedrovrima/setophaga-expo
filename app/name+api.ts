@@ -14,6 +14,7 @@ interface NewName {
   QuemColetou__c: string;
   quemInformou__c: string;
   Regiao__c: string;
+  Comentarios__c: string;
 }
 
 export interface RequestBody {
@@ -26,6 +27,7 @@ export interface RequestBody {
   collectorsName: string;
   informer: string;
   name: string;
+  observation: string;
 }
 
   export const POST = async (request: Request): Promise<Response> => {
@@ -55,6 +57,7 @@ export interface RequestBody {
     Regiao__c: municipalitys.municipios.find((mun) => mun['UF-sigla'] === body.state)?.[
       'regiao-nome'
     ],
+    Comentarios__c: body.observation,
   };
 
 
