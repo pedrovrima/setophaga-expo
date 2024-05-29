@@ -26,10 +26,6 @@ function Layout() {
     setKeyboardVisible(false);
   });
 
-  useEffect(() => {
-    Linking.openURL('setophaga-expo://');
-    console.log('Linking.openURL');
-  }, []);
   return (
     <ThemeProvider>
       <TamaguiProvider config={tamaguiConfig}>

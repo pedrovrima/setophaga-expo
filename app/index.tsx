@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { FlashList } from '@shopify/flash-list';
 
 import { Stack, Link, router } from 'expo-router';
@@ -19,11 +19,17 @@ import useSpeciesSearch from '~/hooks/useSpeciesSearch';
 import useSpeciesData from '~/hooks/useSpeciesData';
 import { ScreenHeight, ScreenWidth } from 'react-native-elements/dist/helpers';
 import Menu from '~/components/Menu';
+import { Linking } from 'react-native';
 
 export default function Home() {
   const query = useSpeciesData();
   const [searchTerm, setSerachTerm] = useState('');
   const [results, isLoading] = useSpeciesSearch(query.data, searchTerm);
+
+  useEffect(() => {
+    console.log('Linking.openURL');
+    Linking.openURL('setophaga-expo://');
+  }, []);
 
   return (
     <>
