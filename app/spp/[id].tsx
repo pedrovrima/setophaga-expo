@@ -30,7 +30,7 @@ export const languageFlags = {
 export default function Species() {
   const { id, querySuccess } = useLocalSearchParams();
   const sppDataQuery = useSpeciesData();
-  console.log(querySuccess);
+
   if (!sppDataQuery.data && sppDataQuery.isLoading) {
     return <Text>Loading</Text>;
   }

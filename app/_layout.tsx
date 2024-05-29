@@ -3,7 +3,7 @@ import { TamaguiProvider } from '@tamagui/core';
 import { QueryClientProvider } from '@tanstack/react-query';
 import { useFonts } from 'expo-font';
 import { RootSiblingParent } from 'react-native-root-siblings';
-import { Keyboard } from 'react-native';
+import { Keyboard, Linking } from 'react-native';
 import { Stack, SplashScreen, router } from 'expo-router';
 
 import { queryClient } from '~/queryClient';
@@ -26,6 +26,10 @@ function Layout() {
     setKeyboardVisible(false);
   });
 
+  useEffect(() => {
+    Linking.openURL('setophaga-expo://');
+    console.log('Linking.openURL');
+  }, []);
   return (
     <ThemeProvider>
       <TamaguiProvider config={tamaguiConfig}>
