@@ -50,9 +50,9 @@ export default function Species() {
   //     });
   //   }
   // }, [querySuccess]);
-  // const thisSpecies = sppDataQuery?.data.find((spp) => '' + spp.Evaldo__c === id);
-  // let words = thisSpecies?.Name.split(' ');
-  // let species = words![0][0] + '. ' + words![1];
+  const thisSpecies = sppDataQuery?.data.find((spp) => '' + spp.Evaldo__c === id);
+  let words = thisSpecies?.Name.split(' ');
+  let species = words![0][0] + '. ' + words![1];
   return (
     <>
       {/* <Stack.Screen options={{ title: thisSpecies?.Name, headerShown: false }} />
