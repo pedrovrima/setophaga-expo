@@ -26,9 +26,16 @@ export default function Home() {
   const [searchTerm, setSerachTerm] = useState('');
   const [results, isLoading] = useSpeciesSearch(query.data, searchTerm);
 
+  const openIfCan = async () => {
+    const can = await Linking.canOpenURL('setophaga-expo://');
+    if (can) {
+      Linking.openURL('setophaga-expo://');
+    }
+  };
+
   useEffect(() => {
+    openIfCan();
     console.log('Linking.openURL');
-    Linking.openURL('setophaga-expo://');
   }, []);
 
   return (
