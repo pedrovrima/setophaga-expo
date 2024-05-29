@@ -31,31 +31,31 @@ export default function Species() {
   const { id, querySuccess } = useLocalSearchParams();
   const sppDataQuery = useSpeciesData();
 
-  if (!sppDataQuery.data && sppDataQuery.isLoading) {
-    return <Text>Loading</Text>;
-  }
+  // if (!sppDataQuery.data && sppDataQuery.isLoading) {
+  //   return <Text>Loading</Text>;
+  // }
 
-  useEffect(() => {
-    if (querySuccess === 'true') {
-      Toast.show('Sinônimo cadastrado com sucesso!', {
-        duration: Toast.durations.LONG,
-        position: Toast.positions.BOTTOM,
-        shadow: true,
-        animation: true,
-        hideOnPress: true,
-        delay: 0,
-        backgroundColor: '#322F35',
-        textColor: '#FFF',
-        opacity: 1,
-      });
-    }
-  }, [querySuccess]);
-  const thisSpecies = sppDataQuery?.data.find((spp) => '' + spp.Evaldo__c === id);
-  let words = thisSpecies?.Name.split(' ');
-  let species = words![0][0] + '. ' + words![1];
+  // useEffect(() => {
+  //   if (querySuccess === 'true') {
+  //     Toast.show('Sinônimo cadastrado com sucesso!', {
+  //       duration: Toast.durations.LONG,
+  //       position: Toast.positions.BOTTOM,
+  //       shadow: true,
+  //       animation: true,
+  //       hideOnPress: true,
+  //       delay: 0,
+  //       backgroundColor: '#322F35',
+  //       textColor: '#FFF',
+  //       opacity: 1,
+  //     });
+  //   }
+  // }, [querySuccess]);
+  // const thisSpecies = sppDataQuery?.data.find((spp) => '' + spp.Evaldo__c === id);
+  // let words = thisSpecies?.Name.split(' ');
+  // let species = words![0][0] + '. ' + words![1];
   return (
     <>
-      <Stack.Screen options={{ title: thisSpecies?.Name, headerShown: false }} />
+      {/* <Stack.Screen options={{ title: thisSpecies?.Name, headerShown: false }} />
 
       <ScrollView
         paddingHorizontal={20}
@@ -192,7 +192,8 @@ export default function Species() {
             })}
           <View height={100}></View>
         </YStack>
-      </ScrollView>
+      </ScrollView> */}
+      <Text>{id}</Text>
     </>
   );
 }
