@@ -58,7 +58,7 @@ export default function SignIn({ setType }: { setType: (type: string) => void })
                 <Input
                   width={'$20'}
                   secureTextEntry={true}
-                  keyboardType="visible-password"
+                  textContentType="password"
                   {...field}
                   placeholder="Senha"
                   onChangeText={field.onChange}

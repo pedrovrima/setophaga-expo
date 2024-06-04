@@ -174,7 +174,9 @@ export default function SignUp({ setType }: { setType: (type: string) => void })
               })
               .then(({}) => {
                 setLoading(false);
-                Alert.alert('Success', 'Cheque seu email para confirmar sua conta');
+                Alert.alert('Success', 'Cheque seu email para confirmar sua conta', [
+                  { text: 'OK', onPress: () => setType('signin') },
+                ]);
               })
               .catch((error) => {
                 if (error) {

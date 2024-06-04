@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 
 import type { BirdRecord, Criteria } from '~/app/species+api';
-
+import type { NormalizedData } from './useSpeciesData';
 type SearchReturn = {
   id: number;
   stringFound: string;
@@ -53,27 +53,27 @@ export const languageDictionary = {
   Swedish__c: 'Svenska',
 };
 
-export default function useSpeciesSearch(data: BirdRecord[], searchValue: string): HookReturn {
+export default function useSpeciesSearch(data: NormalizedData[], searchValue: string): HookReturn {
   const [filteredValues, setFilteredValues] = useState<(SearchReturn | string | void)[]>([]);
 
   useEffect(() => {
     if (data && searchValue.length > 3) {
-      console.log(normalizeName('saíra'))
+      const normalizedSearchValue = normalizeName(searchValue.toLowerCase());
       const queriedData = criterias.reduce(
         (container: (SearchReturn | string)[], crt: Criteria) => {
           const _returnedData = data.filter((value) => {
             if(crt === 'sinom') {
-              return value[crt]?.some((sin) => normalizeName(sin.Name.toLowerCase())?.includes(normalizeName(searchValue.toLowerCase())));
+              return value.normalizedFields[crt]?.some((sin) => normalizeName(sin.Name.toLowerCase())?.includes(normalizedSearchValue));
             }
 
 
             if (crt === 'NVP__c') {
               return (
-                normalizeName(value[crt]?.toLocaleLowerCase())?.includes(normalizeName(searchValue.toLowerCase())) ||
-                normalizeName(value['Name']?.toLocaleLowerCase())?.includes(normalizeName(searchValue.toLowerCase()))
-              );
+                value.normalizedFields[crt]?.toLocaleLowerCase()?.includes(normalizedSearchValue) ||
+                value.normalizedFields['Name']?.toLocaleLowerCase()?.includes(normalizedSearchValue)
+              )
             } else {
-              return normalizeName(value[crt]?.toLocaleLowerCase())?.includes(normalizeName(searchValue.toLowerCase()));
+              return value.normalizedFields[crt]?.toLocaleLowerCase()?.includes(normalizedSearchValue);
             }
           });
 

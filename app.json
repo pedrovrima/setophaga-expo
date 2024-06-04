@@ -30,14 +30,12 @@
       "resizeMode": "contain",
       "backgroundColor": "#FFFBF7"
     },
-    "assetBundlePatterns": [
-      "**/*"
-    ],
+    "assetBundlePatterns": ["**/*"],
     "ios": {
       "supportsTablet": true
     },
     "android": {
-      "versionCode": 4,
+      "versionCode": 5,
       "adaptiveIcon": {
         "foregroundImage": "./assets/icon-borda.png",
         "backgroundColor": "#FFFBF7"
