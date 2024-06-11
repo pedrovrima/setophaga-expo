@@ -5,7 +5,7 @@ import { useEffect, useState } from 'react';
 import { BirdRecord } from '~/app/species+api';
 import { getAllSpecies } from '~/services/api';
 
-interface NormalizedData extends BirdRecord {
+export interface NormalizedData extends BirdRecord {
   normalizedFields: BirdRecord
 }
 
@@ -21,6 +21,7 @@ export default function useSpeciesData() {
   const [storedData, setStoredData] = useState(undefined);
   useEffect(() => {
     if (query.isSuccess) {
+
       const normalizedData = query.data.map((item) => {
         const normalizedFields = {};
         for (const key in item) {
@@ -37,7 +38,7 @@ export default function useSpeciesData() {
       });
     
 
-      const stringfiedData = JSON.stringify(normalizedData[0]);
+      const stringfiedData = JSON.stringify(normalizedData);
       setNormalizedData(normalizedData);
 
       AsyncStorage.setItem('data', stringfiedData);
@@ -46,6 +47,7 @@ export default function useSpeciesData() {
 
   const getItem = async () => {
     const data = await AsyncStorage.getItem('data');
+    console.log('storedData',data)
     if (data) {
       setStoredData(JSON.parse(data));
       return;
@@ -56,6 +58,8 @@ export default function useSpeciesData() {
   useEffect(() => {
     getItem();
   }, []);
+  
+
 
   return { ...query, data: (normalizedData as NormalizedData[]) || storedData };
 }

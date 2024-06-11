@@ -41,6 +41,8 @@ export interface BirdRecord {
   sinom: Sinom[];
 }
 
+
+
 export enum Criteria {
   sinom = 'sinom',
   Danish__c = 'Danish__c',

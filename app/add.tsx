@@ -179,7 +179,7 @@ export default function Details() {
                     <Input
                       borderColor={'#79747E'}
                       {...field}
-                      placeholder="Escreva o termo que deseja cadastrar"
+                      placeholder="Escreva o sinônimo que deseja cadastrar"
                       onChangeText={field.onChange}
                       paddingVertical={12}
                       paddingLeft={16}
@@ -322,7 +322,7 @@ export default function Details() {
                       <TextArea
                         borderColor={'#79747E'}
                         {...field}
-                        placeholder="Algo mais que deseja adicionar?"
+                        placeholder="Algo mais que deseja adicionar? Motivo do nome, algum dado curioso ou importante?"
                         onChangeText={field.onChange}
                         paddingVertical={12}
                         paddingLeft={16}

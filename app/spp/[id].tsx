@@ -50,8 +50,14 @@ export default function Species() {
       });
     }
   }, [querySuccess]);
-  const thisSpecies = sppDataQuery?.data.find((spp) => '' + spp.Evaldo__c === id);
+
+  if (!sppDataQuery.data) {
+    return <Text>Carregando</Text>;
+  }
+
+  const thisSpecies = sppDataQuery?.data?.find((spp) => '' + spp.Evaldo__c === id);
   let words = thisSpecies?.Name.split(' ');
+
   let species = words![0][0] + '. ' + words![1];
   return (
     <>
@@ -193,7 +199,6 @@ export default function Species() {
           <View height={100}></View>
         </YStack>
       </ScrollView>
-      <Text>{id}</Text>
     </>
   );
 }
