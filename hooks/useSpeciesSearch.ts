@@ -57,23 +57,28 @@ export default function useSpeciesSearch(data: NormalizedData[], searchValue: st
   const [filteredValues, setFilteredValues] = useState<(SearchReturn | string | void)[]>([]);
 
   useEffect(() => {
-    if (data && searchValue.length > 3) {
+    console.log(searchValue);
+    if (data && searchValue.length > 2) {
       const normalizedSearchValue = normalizeName(searchValue.toLowerCase());
+
       const queriedData = criterias.reduce(
         (container: (SearchReturn | string)[], crt: Criteria) => {
           const _returnedData = data.filter((value) => {
-            if(crt === 'sinom') {
-              return value.normalizedFields[crt]?.some((sin) => normalizeName(sin.Name.toLowerCase())?.includes(normalizedSearchValue));
+            if (crt === 'sinom') {
+              return value.normalizedFields[crt]?.some((sin) =>
+                normalizeName(sin.Name.toLowerCase())?.includes(normalizedSearchValue)
+              );
             }
-
 
             if (crt === 'NVP__c') {
               return (
                 value.normalizedFields[crt]?.toLocaleLowerCase()?.includes(normalizedSearchValue) ||
                 value.normalizedFields['Name']?.toLocaleLowerCase()?.includes(normalizedSearchValue)
-              )
+              );
             } else {
-              return value.normalizedFields[crt]?.toLocaleLowerCase()?.includes(normalizedSearchValue);
+              return value.normalizedFields[crt]
+                ?.toLocaleLowerCase()
+                ?.includes(normalizedSearchValue);
             }
           });
 
@@ -81,7 +86,12 @@ export default function useSpeciesSearch(data: NormalizedData[], searchValue: st
             const returnedData = _returnedData.map((dt) => ({
               id: dt.Evaldo__c,
               scientificName: dt.Name,
-              stringFound: crt === 'sinom'?  dt[crt].find((sin) => sin.Name.toLowerCase().includes(searchValue.toLowerCase()))?.Name : dt[crt],
+              stringFound:
+                crt === 'sinom'
+                  ? dt[crt].find((sin) =>
+                      sin.Name.toLowerCase().includes(searchValue.toLowerCase())
+                    )?.Name
+                  : dt[crt],
             }));
 
             return [...container, languageDictionary[crt], ...returnedData];
@@ -92,7 +102,7 @@ export default function useSpeciesSearch(data: NormalizedData[], searchValue: st
         []
       );
 
-      if (searchValue.length < 4) {
+      if (searchValue.length < 3) {
         setFilteredValues([]);
         return;
       }
@@ -102,7 +112,7 @@ export default function useSpeciesSearch(data: NormalizedData[], searchValue: st
     }
 
     setFilteredValues([]);
-  }, [searchValue, data]);
+  }, [searchValue]);
   if (!data) return [undefined, true];
 
   return [filteredValues, false];
@@ -122,23 +132,22 @@ const searchByCriteria = (
   }
 };
 
-
-function normalizeName(str:string)
-{
-  if(str){
-    str = str.replace(/[ÀÁÂÃÄÅ]/,"A");
-    str = str.replace(/[àáâãäå]/,"a");
-    str = str.replace(/[í]/,"i");
-    str = str.replace(/[Í]/,"I");
-    str = str.replace(/[óôõ]/,"o");
-    str = str.replace(/[ÓÔÕ]/,"O");
-    str = str.replace(/[ú]/,"u");
-    str = str.replace(/[Ú]/,"U");
-    str = str.replace(/[èéêë]/,"e");
-    str = str.replace(/[ÈÉÊË]/,"E");
-    str = str.replace(/[Ç]/,"C");
-    str = str.replace(/[ç]/,"c");
-    str = str.replace(/[-]/," ");
-    return str.replace(/[^a-z0-9]/gi,''); }
-    return str
+function normalizeName(str: string) {
+  if (str) {
+    str = str.replace(/[ÀÁÂÃÄÅ]/, 'A');
+    str = str.replace(/[àáâãäå]/, 'a');
+    str = str.replace(/[í]/, 'i');
+    str = str.replace(/[Í]/, 'I');
+    str = str.replace(/[óôõ]/, 'o');
+    str = str.replace(/[ÓÔÕ]/, 'O');
+    str = str.replace(/[ú]/, 'u');
+    str = str.replace(/[Ú]/, 'U');
+    str = str.replace(/[èéêë]/, 'e');
+    str = str.replace(/[ÈÉÊË]/, 'E');
+    str = str.replace(/[Ç]/, 'C');
+    str = str.replace(/[ç]/, 'c');
+    str = str.replace(/[-]/, ' ');
+    return str.replace(/[^a-z0-9]/gi, '');
+  }
+  return str;
 }

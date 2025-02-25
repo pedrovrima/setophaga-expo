@@ -67,8 +67,11 @@ export default function Species() {
         paddingHorizontal={20}
         paddingTop={60}
         contentContainerStyle={{ flex: 0 }}
-        backgroundColor={'#FFFBF7'}>
-        <YStack marginBottom={24} gap={'$4'}>
+        backgroundColor={'#FFFBF7'}
+        flex={1}
+        alignItems="center"
+        width="auto">
+        <YStack maxWidth={900} minWidth={400} marginBottom={24} gap={'$4'}>
           <XStack gap={16} alignItems="center" flex={1}>
             <Icon
               style={{ flex: 1 }}

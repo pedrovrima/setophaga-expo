@@ -39,8 +39,14 @@ export default function Home() {
   }, []);
 
   return (
-    <>
-      <YStack paddingHorizontal={20} paddingTop={60} flex={1} backgroundColor={'#FFFBF7'}>
+    <View flex={1} alignItems="center" backgroundColor={'#FFFBF7'} paddingHorizontal={20}>
+      <YStack
+        paddingHorizontal={20}
+        paddingTop={60}
+        maxWidth={900}
+        minWidth={400}
+        flex={1}
+        backgroundColor={'#FFFBF7'}>
         <View alignItems="center" marginBottom="$4">
           <Stack.Screen options={{ title: 'Home', headerShown: false }} />
           <Image source={require('../assets/logo.png')} height={48} width={140} />
@@ -49,25 +55,33 @@ export default function Home() {
         <Text textAlign="center" marginBottom={40}>
           Registre e pesquise nomes de Pássaros
         </Text>
-        <View borderRadius={'$12'} overflow="hidden">
-          <Input
-            borderColor={'$borderColor'}
-            onChangeText={(text) => setSerachTerm(text)}
-            value={searchTerm}
-            backgroundColor={'#ECE6F0'}
-            placeholder="Busque o nome do pássaro"
-            placeholderTextColor={'#49454F'}
-          />
-          <Image
-            source={require('../assets/icons/search.png')}
-            height={17}
-            width={17}
-            position="absolute"
-            right={15}
-            top={15}
-          />
+        <View
+          flexDirection="column"
+          display="flex"
+          alignItems="center"
+          gap="$2"
+          width="100%"
+          justifyContent="center">
+          <View borderRadius={'$12'} overflow="hidden">
+            <Input
+              borderColor={'$borderColor'}
+              onChangeText={(text) => setSerachTerm(text)}
+              value={searchTerm}
+              backgroundColor={'#ECE6F0'}
+              placeholder="Busque o nome do pássaro"
+              placeholderTextColor={'#49454F'}
+            />
+            <Image
+              source={require('../assets/icons/search.png')}
+              height={17}
+              width={17}
+              position="absolute"
+              right={15}
+              top={15}
+            />
+          </View>
         </View>
-        {searchTerm.length > 3 && (
+        {searchTerm.length > 2 && (
           <>
             {results?.length > 0 ? (
               <FlashList
@@ -105,6 +119,7 @@ export default function Home() {
                   );
                 }}
                 data={results}
+                
               />
             ) : (
               <Text marginTop={'$4'}>Nenhum resultado encontrado</Text>
@@ -112,6 +127,6 @@ export default function Home() {
           </>
         )}
       </YStack>
-    </>
+    </View>
   );
 }
