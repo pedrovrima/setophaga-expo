@@ -23,6 +23,7 @@ import { Linking } from 'react-native';
 
 export default function Home() {
   const query = useSpeciesData();
+
   const [searchTerm, setSerachTerm] = useState('');
   const [results, isLoading] = useSpeciesSearch(query.data, searchTerm);
 
@@ -119,7 +120,6 @@ export default function Home() {
                   );
                 }}
                 data={results}
-                
               />
             ) : (
               <Text marginTop={'$4'}>Nenhum resultado encontrado</Text>

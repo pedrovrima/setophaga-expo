@@ -1,96 +1,120 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import type { BirdWithSynonyms, Synonym } from '~/app/species+api';
 
-import type { BirdRecord, Criteria } from '~/app/species+api';
-import type { NormalizedData } from './useSpeciesData';
+type Criteria =
+  | 'nvt'
+  | 'synonyms'
+  | 'name_sci'
+  | 'name_english'
+  | 'name_spanish'
+  | 'name_danish'
+  | 'name_dutch'
+  | 'name_estonian'
+  | 'name_finnish'
+  | 'name_french'
+  | 'name_german'
+  | 'name_hungarian'
+  | 'name_japanese'
+  | 'name_norwegian'
+  | 'name_polish'
+  | 'name_russian'
+  | 'name_slovak'
+  | 'name_swedish'
+  | 'name_ptbr';
+
 type SearchReturn = {
   id: number;
-  stringFound: string;
+  stringFound: string | Synonym[];
   scientificName: string;
 };
 
 export type HookReturn = [(SearchReturn | string | void)[] | undefined, boolean];
 
 const criterias = [
-  'NVP__c',
-  'sinom',
-  'USName__c',
-  'Spanish__c',
-  'Danish__c',
-  'Dutch__c',
-  'Estonian__c',
-  'Finnish__c',
-  'French__c',
-  'German__c',
-  'Hungarian__c',
-  'Japanese__c',
-  'Norwegian__c',
-  'Polish__c',
-  'Russian__c',
-  'Slovak__c',
-  'Swedish__c',
+  'name_ptbr',
+  'synonyms',
+  'name_english',
+  'name_spanish',
+  'name_danish',
+  'name_dutch',
+  'name_estonian',
+  'name_finnish',
+  'name_french',
+  'name_german',
+  'name_hungarian',
+  'name_japanese',
+  'name_norwegian',
+  'name_polish',
+  'name_russian',
+  'name_slovak',
+  'name_swedish',
+  'name_ptbr',
 ] as Criteria[];
 
 export const languageDictionary = {
-  Name: 'Nome Cientifico',
-  NVP__c: 'CBRO',
-  sinom: 'Nomes Populares',
-  USName__c: 'English',
-  Spanish__c: 'Español',
-  Danish__c: 'Dansk',
-  Dutch__c: 'Nederlands',
-  Estonian__c: 'Eesti',
-  Finnish__c: 'Suomi',
-  French__c: 'Français',
-  German__c: 'Deutsch',
-  Hungarian__c: 'Magyar',
-  Japanese__c: '日本語',
-  Norwegian__c: 'Norsk',
-  Polish__c: 'Polski',
-  Russian__c: 'Русский',
-  Slovak__c: 'Slovenčina',
-  Swedish__c: 'Svenska',
+  name_sci: 'Nome Cientifico',
+  nvt: 'CBRO',
+  synonyms: 'Nomes Populares',
+  name_english: 'English',
+  name_ptbr: 'Português',
+  name_spanish: 'Español',
+  name_danish: 'Dansk',
+  name_dutch: 'Nederlands',
+  name_estonian: 'Eesti',
+  name_finnish: 'Suomi',
+  name_french: 'Français',
+  name_german: 'Deutsch',
+  name_hungarian: 'Magyar',
+  name_japanese: '日本語',
+  name_norwegian: 'Norsk',
+  name_polish: 'Polski',
+  name_russian: 'Русский',
+  name_slovak: 'Slovenčina',
+  name_swedish: 'Svenska',
 };
 
-export default function useSpeciesSearch(data: NormalizedData[], searchValue: string): HookReturn {
+export default function useSpeciesSearch(
+  data: BirdWithSynonyms[],
+  searchValue: string
+): HookReturn {
   const [filteredValues, setFilteredValues] = useState<(SearchReturn | string | void)[]>([]);
 
   useEffect(() => {
-    console.log(searchValue);
     if (data && searchValue.length > 2) {
       const normalizedSearchValue = normalizeName(searchValue.toLowerCase());
 
       const queriedData = criterias.reduce(
         (container: (SearchReturn | string)[], crt: Criteria) => {
           const _returnedData = data.filter((value) => {
-            if (crt === 'sinom') {
-              return value.normalizedFields[crt]?.some((sin) =>
-                normalizeName(sin.Name.toLowerCase())?.includes(normalizedSearchValue)
+            if (crt === 'synonyms') {
+              const filteredSynonyms = value.synonyms.filter((synonym) =>
+                normalizeName(synonym.name.toLowerCase()).includes(normalizedSearchValue)
               );
+
+              return filteredSynonyms.length > 0;
             }
 
-            if (crt === 'NVP__c') {
+            if (crt === 'name_ptbr') {
               return (
-                value.normalizedFields[crt]?.toLocaleLowerCase()?.includes(normalizedSearchValue) ||
-                value.normalizedFields['Name']?.toLocaleLowerCase()?.includes(normalizedSearchValue)
+                normalizeName(value[crt]?.toLowerCase())?.includes(normalizedSearchValue) ||
+                normalizeName(value.name_sci?.toLowerCase())?.includes(normalizedSearchValue)
               );
             } else {
-              return value.normalizedFields[crt]
-                ?.toLocaleLowerCase()
-                ?.includes(normalizedSearchValue);
+              return normalizeName(value[crt]?.toLowerCase())?.includes(normalizedSearchValue);
             }
           });
 
           if (_returnedData?.length > 0) {
             const returnedData = _returnedData.map((dt) => ({
-              id: dt.Evaldo__c,
-              scientificName: dt.Name,
+              id: dt.id,
+              scientificName: dt.name_sci,
               stringFound:
-                crt === 'sinom'
-                  ? dt[crt].find((sin) =>
-                      sin.Name.toLowerCase().includes(searchValue.toLowerCase())
-                    )?.Name
+                crt === 'synonyms'
+                  ? dt.synonyms.find((synonym) =>
+                      normalizeName(synonym.name.toLowerCase()).includes(normalizedSearchValue)
+                    )?.name
                   : dt[crt],
             }));
 
@@ -102,6 +126,7 @@ export default function useSpeciesSearch(data: NormalizedData[], searchValue: st
         []
       );
 
+      console.log(queriedData);
       if (searchValue.length < 3) {
         setFilteredValues([]);
         return;
@@ -113,24 +138,11 @@ export default function useSpeciesSearch(data: NormalizedData[], searchValue: st
 
     setFilteredValues([]);
   }, [searchValue]);
+
   if (!data) return [undefined, true];
 
   return [filteredValues, false];
 }
-
-const searchByCriteria = (
-  criteria: Criteria,
-  value: BirdRecord,
-  searchValue: string
-): SearchReturn | void => {
-  if (value[criteria]?.toLowerCase()?.includes(searchValue.toLowerCase())) {
-    return {
-      id: value.Evaldo__c,
-      scientificName: value.Name,
-      stringFound: value[criteria],
-    };
-  }
-};
 
 function normalizeName(str: string) {
   if (str) {

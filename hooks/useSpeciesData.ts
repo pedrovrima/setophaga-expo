@@ -6,7 +6,7 @@ import { BirdRecord } from '~/app/species+api';
 import { getAllSpecies } from '~/services/api';
 
 export interface NormalizedData extends BirdRecord {
-  normalizedFields: BirdRecord
+  normalizedFields: BirdRecord;
 }
 
 export default function useSpeciesData() {
@@ -18,10 +18,10 @@ export default function useSpeciesData() {
     refetchOnWindowFocus: false,
     staleTime: 1000 * 60 * 60 * 24,
   });
+
   const [storedData, setStoredData] = useState(undefined);
   useEffect(() => {
     if (query.isSuccess) {
-
       const normalizedData = query.data.map((item) => {
         const normalizedFields = {};
         for (const key in item) {
@@ -30,13 +30,12 @@ export default function useSpeciesData() {
           } else if (Array.isArray(item[key]) && key === 'sinom') {
             normalizedFields[key] = item[key].map((sin) => ({
               ...sin,
-              normalizedSinName: normalizeName(sin.Name.toLowerCase())
+              normalizedSinName: normalizeName(sin.Name.toLowerCase()),
             }));
           }
         }
         return { ...item, normalizedFields };
       });
-    
 
       const stringfiedData = JSON.stringify(normalizedData);
       setNormalizedData(normalizedData);
@@ -47,7 +46,7 @@ export default function useSpeciesData() {
 
   const getItem = async () => {
     const data = await AsyncStorage.getItem('data');
-    console.log('storedData',data)
+    console.log('storedData', data);
     if (data) {
       setStoredData(JSON.parse(data));
       return;
@@ -58,30 +57,28 @@ export default function useSpeciesData() {
   useEffect(() => {
     getItem();
   }, []);
-  
 
+  console.log(normalizedData);
 
   return { ...query, data: (normalizedData as NormalizedData[]) || storedData };
 }
 
-
-
-function normalizeName(str:string)
-{
-  if(str){
-    str = str.replace(/[ÀÁÂÃÄÅ]/,"A");
-    str = str.replace(/[àáâãäå]/,"a");
-    str = str.replace(/[í]/,"i");
-    str = str.replace(/[Í]/,"I");
-    str = str.replace(/[óôõ]/,"o");
-    str = str.replace(/[ÓÔÕ]/,"O");
-    str = str.replace(/[ú]/,"u");
-    str = str.replace(/[Ú]/,"U");
-    str = str.replace(/[èéêë]/,"e");
-    str = str.replace(/[ÈÉÊË]/,"E");
-    str = str.replace(/[Ç]/,"C");
-    str = str.replace(/[ç]/,"c");
-    str = str.replace(/[-]/," ");
-    return str.replace(/[^a-z0-9]/gi,''); }
-    return str
+function normalizeName(str: string) {
+  if (str) {
+    str = str.replace(/[ÀÁÂÃÄÅ]/, 'A');
+    str = str.replace(/[àáâãäå]/, 'a');
+    str = str.replace(/[í]/, 'i');
+    str = str.replace(/[Í]/, 'I');
+    str = str.replace(/[óôõ]/, 'o');
+    str = str.replace(/[ÓÔÕ]/, 'O');
+    str = str.replace(/[ú]/, 'u');
+    str = str.replace(/[Ú]/, 'U');
+    str = str.replace(/[èéêë]/, 'e');
+    str = str.replace(/[ÈÉÊË]/, 'E');
+    str = str.replace(/[Ç]/, 'C');
+    str = str.replace(/[ç]/, 'c');
+    str = str.replace(/[-]/, ' ');
+    return str.replace(/[^a-z0-9]/gi, '');
+  }
+  return str;
 }
