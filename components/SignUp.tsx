@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useForm, Controller, set } from 'react-hook-form';
 import { Pressable, Alert } from 'react-native';
 import { Button, Dialog, H3, Input, Spinner, Text, View, YStack, ScrollView } from 'tamagui';
-import { supabase } from '~/services/supabase';
+import { supabase } from '~/app/db';
 import LoadingDialog from './LoadingDialog';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 

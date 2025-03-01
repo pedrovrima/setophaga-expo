@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useForm, Controller, set } from 'react-hook-form';
 import { Pressable, Alert } from 'react-native';
 import { Button, Dialog, H3, Input, Spinner, Text, View, YStack } from 'tamagui';
-import { supabase } from '~/services/supabase';
+import { supabase } from '~/app/db';
 import LoadingDialog from './LoadingDialog';
 
 export default function SignIn({ setType }: { setType: (type: string) => void }) {
@@ -80,6 +80,11 @@ export default function SignIn({ setType }: { setType: (type: string) => void })
             rules={{ required: 'Obrigatório' }}
           />
           {errors.password && <ErrorText>{errors?.password?.message as string}</ErrorText>}
+          <Pressable onPress={() => setType('forgot-password')}>
+            <Text textDecorationLine="underline" color="#6750A4" fontSize={12}>
+              Esqueceu sua senha?
+            </Text>
+          </Pressable>
         </YStack>
         <Button
           borderRadius="$12"
@@ -92,11 +97,14 @@ export default function SignIn({ setType }: { setType: (type: string) => void })
           backgroundColor="#6750A4"
           onPress={handleSubmit(async (data) => {
             const { email, password } = data;
+            console.log(email, password);
             setLoading(true);
-            const { error } = await supabase.auth.signInWithPassword({
+            const { error, data: datum } = await supabase.auth.signInWithPassword({
               email,
               password,
             });
+
+            console.log(datum, error);
             if (error) {
               setLoading(false);
               if (error) Alert.alert(error.message);

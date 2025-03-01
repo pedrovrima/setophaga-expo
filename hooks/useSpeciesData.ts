@@ -2,15 +2,15 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useQuery } from '@tanstack/react-query';
 import { useEffect, useState } from 'react';
 
-import { BirdRecord } from '~/app/species+api';
+import { BirdWithSynonyms } from '~/app/species+api';
 import { getAllSpecies } from '~/services/api';
 
-export interface NormalizedData extends BirdRecord {
-  normalizedFields: BirdRecord;
+export interface NormalizedData extends BirdWithSynonyms {
+  normalizedFields: BirdWithSynonyms;
 }
 
 export default function useSpeciesData() {
-  const [normalizedData, setNormalizedData] = useState<BirdRecord[] | undefined>(undefined);
+  const [normalizedData, setNormalizedData] = useState<BirdWithSynonyms[] | undefined>(undefined);
   const query = useQuery({
     queryKey: ['allSpp'],
     queryFn: getAllSpecies,
@@ -19,11 +19,11 @@ export default function useSpeciesData() {
     staleTime: 1000 * 60 * 60 * 24,
   });
 
-  const [storedData, setStoredData] = useState(undefined);
+  const [storedData, setStoredData] = useState<BirdWithSynonyms[] | undefined>(undefined);
   useEffect(() => {
     if (query.isSuccess) {
       const normalizedData = query.data.map((item) => {
-        const normalizedFields = {};
+        const normalizedFields: BirdWithSynonyms = {};
         for (const key in item) {
           if (typeof item[key] === 'string') {
             normalizedFields[key] = normalizeName(item[key]?.toLowerCase());
@@ -46,7 +46,7 @@ export default function useSpeciesData() {
 
   const getItem = async () => {
     const data = await AsyncStorage.getItem('data');
-    console.log('storedData', data);
+
     if (data) {
       setStoredData(JSON.parse(data));
       return;
@@ -57,8 +57,6 @@ export default function useSpeciesData() {
   useEffect(() => {
     getItem();
   }, []);
-
-  console.log(normalizedData);
 
   return { ...query, data: (normalizedData as NormalizedData[]) || storedData };
 }

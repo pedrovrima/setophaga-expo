@@ -24,7 +24,7 @@ import Authentication from '~/components/screens/Authentication';
 import useCreateName from '~/hooks/useCreateName';
 import useSpeciesData from '~/hooks/useSpeciesData';
 import { municipios } from '~/municipios.json';
-import { supabase } from '~/services/supabase';
+import { supabase } from '~/app/db';
 import { ScreenHeight, ScreenWidth } from 'react-native-elements/dist/helpers';
 import { Icon } from 'react-native-elements';
 import LoadingDialog from '~/components/LoadingDialog';

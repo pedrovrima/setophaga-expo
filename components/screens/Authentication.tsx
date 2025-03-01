@@ -2,10 +2,11 @@ import React, { useState } from 'react';
 import { Alert, StyleSheet, View, AppState, Dimensions } from 'react-native';
 import { Button, Input, Image, Label } from 'tamagui';
 
-import { supabase } from '../../services/supabase';
+import { supabase } from '../../app/db';
 import { YStack } from 'tamagui';
 import SignIn from '../SignIn';
 import SignUp from '../SignUp';
+import ForgotPassword from '../ForgotPassword';
 
 // Tells Supabase Auth to continuously refresh the session automatically if
 // the app is in the foreground. When this is added, you will continue to receive
@@ -92,6 +93,21 @@ export default function Authentication() {
         gap={'$8'}>
         <Image source={require('../../assets/logo.png')} height={48 * 2} width={140 * 2} />
         <SignUp setType={setType} />
+      </YStack>
+    );
+  }
+
+  if (type === 'forgot-password') {
+    return (
+      <YStack
+        height={ScreenHeight}
+        marginTop={60}
+        alignItems="center"
+        justifyContent="flex-start"
+        backgroundColor={'#FFFBF7'}
+        gap={'$8'}>
+        <Image source={require('../../assets/logo.png')} height={48 * 2} width={140 * 2} />
+        <ForgotPassword setType={setType} />
       </YStack>
     );
   }

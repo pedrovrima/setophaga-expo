@@ -33,6 +33,7 @@ export interface Bird {
 
 export interface BirdWithSynonyms extends Bird {
   synonyms: Synonym[];
+  normalizedFields: BirdWithSynonyms;
 }
 
 export enum Criteria {
@@ -76,20 +77,15 @@ export interface Synonym {
 
 export const GET = async (): Promise<Response> => {
   try {
-    console.log('trying');
     const { data, error } = await supabase.from('birds').select(`
         *,
         synonyms (*)
       `);
 
-    console.log(data, error);
     if (error) throw error;
-    console.log(data[0].sinonyms);
 
-    console.log(data);
     return Response.json(data);
   } catch (e: any) {
-    console.log(e);
     throw new Error(e?.message);
   }
 };

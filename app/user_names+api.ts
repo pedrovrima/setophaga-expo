@@ -1,6 +1,5 @@
 import { getAccessToken } from '~/services/api';
 
-
 export interface Sinom {
   Approval_status__c: string;
   Ave__c: string;
@@ -63,40 +62,39 @@ export enum Criteria {
   USName__c = 'USName__c',
 }
 
-export const POST = async (request:Request): Promise<Response> => {
+export const POST = async (request: Request): Promise<Response> => {
   try {
     const auth = await getAccessToken();
 
     const body = await request.json();
 
-    const {id} = body
+    const { id } = body;
 
-    const sinom = await fetch(
-      `https://evaldo.my.salesforce.com/services/data/v60.0/query?q=SELECT+Id%2C+Approval_status__c%2C+Ave__c%2C+ColetorId__c%2C+ColetorName__c%2C+Estado__c%2C+Municipio__c%2C+Name%2C+QuemInformou__c%2C+Regiao__c+FROM+Musk__c+WHERE+ColetorId__c%3D${id}`,
-      {
-        method: 'GET',
-        headers: {
-          Authorization: `Bearer ${auth?.access_token}`,
-        },
-      }
-    );
-    
-    if (data) {
-      const returnedData = await data.json();
-      const sinomData = await sinom.json();
+    // const sinom = await fetch(
+    //   `https://evaldo.my.salesforce.com/services/data/v60.0/query?q=SELECT+Id%2C+Approval_status__c%2C+Ave__c%2C+ColetorId__c%2C+ColetorName__c%2C+Estado__c%2C+Municipio__c%2C+Name%2C+QuemInformou__c%2C+Regiao__c+FROM+Musk__c+WHERE+ColetorId__c%3D${id}`,
+    //   {
+    //     method: 'GET',
+    //     headers: {
+    //       Authorization: `Bearer ${auth?.access_token}`,
+    //     },
+    //   }
+    // );
 
-      const mergedData = returnedData.records.map((record: BirdRecord) => {
-        const matchingSinom = sinomData.records.filter((sinom: any) => sinom.Ave__c === record.Id);
-        return {
-          ...record,
-          sinom: matchingSinom || null,
-        };
-      });
+    // if (data) {
+    //   const returnedData = await data.json();
+    //   const sinomData = await sinom.json();
 
+    //   const mergedData = returnedData.records.map((record: BirdRecord) => {
+    //     const matchingSinom = sinomData.records.filter((sinom: any) => sinom.Ave__c === record.Id);
+    //     return {
+    //       ...record,
+    //       sinom: matchingSinom || null,
+    //     };
+    //   });
 
-      return Response.json(mergedData);
-    }
-    return Response.json({});
+    //   return Response.json(mergedData);
+    // }
+    // return Response.json({});
   } catch (e: any) {
     throw new Error(e?.message);
   }

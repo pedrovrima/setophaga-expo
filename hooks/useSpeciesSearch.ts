@@ -55,10 +55,10 @@ const criterias = [
 
 export const languageDictionary = {
   name_sci: 'Nome Cientifico',
-  nvt: 'CBRO',
+  name_ptbr: 'CBRO',
   synonyms: 'Nomes Populares',
   name_english: 'English',
-  name_ptbr: 'Português',
+
   name_spanish: 'Español',
   name_danish: 'Dansk',
   name_dutch: 'Nederlands',

@@ -7,33 +7,29 @@ import Toast from 'react-native-root-toast';
 import { useEffect } from 'react';
 import * as Linking from 'expo-linking';
 import Menu from '~/components/Menu';
-
+import { BirdWithSynonyms } from '~/app/species+api';
 export const languageFlags = {
-  NVP__c: '\uD83C\uDDE7\uD83C\uDDF7', // Brazil
-  USName__c: '\uD83C\uDDFA\uD83C\uDDF8', // United States
-  Spanish__c: '\uD83C\uDDEA\uD83C\uDDF8', // Spain
-  Danish__c: '\uD83C\uDDE9\uD83C\uDDF0', // Denmark
-  Dutch__c: '\uD83C\uDDF3\uD83C\uDDF1', // Netherlands
-  Estonian__c: '\uD83C\uDDEA\uD83C\uDDEA', // Estonia
-  Finnish__c: '\uD83C\uDDEB\uD83C\uDDEE', // Finland
-  French__c: '\uD83C\uDDEB\uD83C\uDDF7', // France
-  German__c: '\uD83C\uDDE9\uD83C\uDDEA', // Germany
-  Hungarian__c: '\uD83C\uDDED\uD83C\uDDFA', // Hungary
-  Japanese__c: '\uD83C\uDDEF\uD83C\uDDF5', // Japan
-  Norwegian__c: '\uD83C\uDDF3\uD83C\uDDF4', // Norway
-  Polish__c: '\uD83C\uDDF5\uD83C\uDDF1', // Poland
-  Russian__c: '\uD83C\uDDF7\uD83C\uDDFA', // Russia
-  Slovak__c: '\uD83C\uDDF8\uD83C\uDDF0', // Slovakia
-  Swedish__c: '\uD83C\uDDF8\uD83C\uDDEA', // Sweden
+  name_ptbr: '\uD83C\uDDE7\uD83C\uDDF7', // Brazil
+  name_english: '\uD83C\uDDFA\uD83C\uDDF8', // United States
+  name_spanish: '\uD83C\uDDEA\uD83C\uDDF8', // Spain
+  name_danish: '\uD83C\uDDE9\uD83C\uDDF0', // Denmark
+  name_dutch: '\uD83C\uDDF3\uD83C\uDDF1', // Netherlands
+  name_estonian: '\uD83C\uDDEA\uD83C\uDDEA', // Estonia
+  name_finnish: '\uD83C\uDDEB\uD83C\uDDEE', // Finland
+  name_french: '\uD83C\uDDEB\uD83C\uDDF7', // France
+  name_german: '\uD83C\uDDE9\uD83C\uDDEA', // Germany
+  name_hungarian: '\uD83C\uDDED\uD83C\uDDFA', // Hungary
+  name_japanese: '\uD83C\uDDEF\uD83C\uDDF5', // Japan
+  name_norwegian: '\uD83C\uDDF3\uD83C\uDDF4', // Norway
+  name_polish: '\uD83C\uDDF5\uD83C\uDDF1', // Poland
+  name_russian: '\uD83C\uDDF7\uD83C\uDDFA', // Russia
+  name_slovak: '\uD83C\uDDF8\uD83C\uDDF0', // Slovakia
+  name_swedish: '\uD83C\uDDF8\uD83C\uDDEA', // Sweden
 };
 
 export default function Species() {
   const { id, querySuccess } = useLocalSearchParams();
   const sppDataQuery = useSpeciesData();
-
-  if (!sppDataQuery.data && sppDataQuery.isLoading) {
-    return <Text>Loading</Text>;
-  }
 
   useEffect(() => {
     if (querySuccess === 'true') {
@@ -51,39 +47,52 @@ export default function Species() {
     }
   }, [querySuccess]);
 
+  if (!sppDataQuery.data && sppDataQuery.isLoading) {
+    return <Text>Loading</Text>;
+  }
   if (!sppDataQuery.data) {
     return <Text>Carregando</Text>;
   }
 
-  const thisSpecies = sppDataQuery?.data?.find((spp) => '' + spp.Evaldo__c === id);
-  let words = thisSpecies?.Name.split(' ');
+  const thisSpecies = sppDataQuery?.data?.find((spp) => '' + spp.id === id) as
+    | BirdWithSynonyms
+    | undefined;
+  let words = thisSpecies?.name_sci.split(' ');
+  console.log(words);
 
   let species = words![0][0] + '. ' + words![1];
   return (
     <>
-      <Stack.Screen options={{ title: thisSpecies?.Name, headerShown: false }} />
+      <Stack.Screen options={{ title: thisSpecies?.name_sci, headerShown: false }} />
 
       <ScrollView
         paddingHorizontal={20}
         paddingTop={60}
-        contentContainerStyle={{ flex: 0 }}
+        contentContainerStyle={{
+          flex: 0,
+          alignItems: 'center',
+          width: '100%',
+          minWidth: '100%',
+        }}
         backgroundColor={'#FFFBF7'}
         flex={1}
-        alignItems="center"
-        width="auto">
-        <YStack maxWidth={900} minWidth={400} marginBottom={24} gap={'$4'}>
-          <XStack gap={16} alignItems="center" flex={1}>
-            <Icon
-              style={{ flex: 1 }}
-              name="arrow-back"
-              type="material"
-              color="#6750A4"
-              onPress={() => router.back()}
-            />
-            <Text flex={2} wordWrap="normal" fontSize={22}>
-              {thisSpecies?.NVP__c}
-            </Text>
+        width="100%">
+        <YStack maxWidth={600} width="100%" marginBottom={24} gap={'$4'}>
+          <XStack justifyContent="space-between" width="100%" marginBottom={24}>
+            <XStack gap={16} alignItems="center" flex={1}>
+              <Icon
+                style={{ flex: 1 }}
+                name="arrow-back"
+                type="material"
+                color="#6750A4"
+                onPress={() => router.back()}
+              />
+              <Text flex={2} wordWrap="normal" fontSize={22} fontStyle="italic">
+                {thisSpecies?.name_sci}
+              </Text>
+            </XStack>
           </XStack>
+
           <Button
             borderRadius="$12"
             color={'#FFF'}
@@ -91,9 +100,11 @@ export default function Species() {
             paddingVertical={10}
             fontSize={14}
             fontWeight={'bold'}
-            width={'full'}
+            width={'$20'}
             backgroundColor="#6750A4"
-            onPress={() => router.push(`/add?id=${id}` as string)}>
+            onPress={() => router.push(`/add?id=${id}`)}
+            marginTop={16}
+            alignSelf="center">
             Adicionar sinônimo
           </Button>
         </YStack>
@@ -103,16 +114,19 @@ export default function Species() {
           borderWidth={1}
           paddingVertical={24}
           paddingHorizontal={24}
-          borderRadius={'$6'}>
+          borderRadius={'$6'}
+          maxWidth={600}
+          width="100%">
           <XStack
             justifyContent="space-between"
             borderBottomWidth={1}
             paddingBottom={8}
-            borderBottomColor={'#CAC4D0'}>
+            borderBottomColor={'#CAC4D0'}
+            width="100%">
             <Text color="#6750A4" fontWeight={'bold'}>
               ORDEM
             </Text>
-            <Text>{thisSpecies?.Ordem__c}</Text>
+            <Text>{thisSpecies?.order}</Text>
           </XStack>
           <XStack
             justifyContent="space-between"
@@ -122,7 +136,7 @@ export default function Species() {
             <Text lineHeight={20} color="#6750A4" fontWeight={'bold'}>
               FAMÍLIA
             </Text>
-            <Text>{thisSpecies?.Familia__c}</Text>
+            <Text>{thisSpecies?.family}</Text>
           </XStack>
           <XStack
             justifyContent="space-between"
@@ -132,7 +146,7 @@ export default function Species() {
             <Text lineHeight={20} color="#6750A4" fontWeight={'bold'}>
               GÊNERO
             </Text>
-            <Text>{thisSpecies?.Genero__c}</Text>
+            <Text>{thisSpecies?.genera}</Text>
           </XStack>
           <XStack justifyContent="space-between" paddingTop={8}>
             <Text lineHeight={20} color="#6750A4" fontWeight={'bold'}>
@@ -143,11 +157,13 @@ export default function Species() {
 
           <Button
             onPress={() =>
-              Linking.openURL(`https://www.wikiaves.com.br/wiki/${thisSpecies?.NVP__c}`)
+              Linking.openURL(`https://www.wikiaves.com.br/wiki/${thisSpecies?.name_ptbr}`)
             }
             borderRadius="$12"
             paddingVertical={10}
             borderColor={'#6750A4'}
+            maxWidth={400}
+            alignSelf="center"
             backgroundColor={'transparent'}
             borderWidth={1}
             width={'full'}
@@ -157,10 +173,10 @@ export default function Species() {
           </Button>
         </View>
 
-        <YStack>
+        <YStack maxWidth={600} width="100%" marginTop={48}>
           {thisSpecies &&
             Object.keys(languageDictionary).map((dct) => {
-              if (thisSpecies[dct]?.length > 0 && dct === 'sinom') {
+              if (thisSpecies[dct]?.length > 0 && dct === 'synonyms') {
                 return (
                   <View
                     key={dct}
@@ -171,17 +187,17 @@ export default function Species() {
                       <Text fontWeight="bold">{languageDictionary[dct]}</Text>
                     </Text>
 
-                    {thisSpecies.sinom
-                      .sort((a, b) => a.Name.localeCompare(b.Name))
+                    {thisSpecies.synonyms
+                      .sort((a, b) => a.name.localeCompare(b.name))
                       .map((sin) => (
-                        <Text key={sin.ColetorId__c + sin.Name} fontSize={18} lineHeight={20}>
-                          {`${sin.Name} (${sin.Regiao__c})`}
+                        <Text key={sin.id} fontSize={18} lineHeight={20}>
+                          {`${sin.name} (${sin.region})`}
                         </Text>
                       ))}
                   </View>
                 );
               }
-              if (thisSpecies[dct] && dct !== 'sinom') {
+              if (thisSpecies[dct as keyof typeof thisSpecies] && dct !== 'synonyms') {
                 return (
                   <View
                     key={dct}
@@ -189,11 +205,13 @@ export default function Species() {
                     borderBottomColor={'#CAC4D0'}
                     borderBottomWidth={1}>
                     <Text fontSize={14} lineHeight={20} textTransform="uppercase">
-                      <Text>{languageFlags[dct]}</Text>{' '}
-                      <Text fontWeight="bold">{languageDictionary[dct]}</Text>
+                      <Text>{languageFlags[dct as keyof typeof languageFlags]}</Text>{' '}
+                      <Text fontWeight="bold">
+                        {languageDictionary[dct as keyof typeof languageDictionary]}
+                      </Text>
                     </Text>
                     <Text fontSize={18} lineHeight={20} fontStyle="italic">
-                      {thisSpecies[dct]}
+                      {thisSpecies[dct as keyof typeof thisSpecies]}
                     </Text>
                   </View>
                 );

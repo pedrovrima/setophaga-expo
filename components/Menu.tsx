@@ -3,7 +3,6 @@ import { router } from 'expo-router';
 import { Icon } from 'react-native-elements';
 import { ScreenWidth } from 'react-native-elements/dist/helpers';
 export default function Menu({ show }: { show: boolean }) {
-  console.log(show);
   return (
     <View
       height={80}

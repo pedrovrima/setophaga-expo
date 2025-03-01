@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { FlashList } from '@shopify/flash-list';
+import { isMobile } from 'react-device-detect';
 
 import { Stack, Link, router } from 'expo-router';
 import {
@@ -20,6 +21,7 @@ import useSpeciesData from '~/hooks/useSpeciesData';
 import { ScreenHeight, ScreenWidth } from 'react-native-elements/dist/helpers';
 import Menu from '~/components/Menu';
 import { Linking } from 'react-native';
+import { Platform } from 'react-native';
 
 export default function Home() {
   const query = useSpeciesData();
@@ -29,7 +31,7 @@ export default function Home() {
 
   const openIfCan = async () => {
     const can = await Linking.canOpenURL('setophaga-expo://');
-    if (can) {
+    if (can && isMobile) {
       Linking.openURL('setophaga-expo://');
     }
   };
@@ -44,8 +46,9 @@ export default function Home() {
       <YStack
         paddingHorizontal={20}
         paddingTop={60}
-        maxWidth={900}
-        minWidth={400}
+        maxWidth={1000}
+        minWidth={!isMobile ? 700 : 'auto'}
+        width="100%"
         flex={1}
         backgroundColor={'#FFFBF7'}>
         <View alignItems="center" marginBottom="$4">
@@ -57,13 +60,20 @@ export default function Home() {
           Registre e pesquise nomes de Pássaros
         </Text>
         <View
-          flexDirection="column"
           display="flex"
           alignItems="center"
           gap="$2"
+          alignSelf="stretch"
+          justifyContent="center"
           width="100%"
-          justifyContent="center">
-          <View borderRadius={'$12'} overflow="hidden">
+          position="relative"
+          zIndex={1}>
+          <View
+            borderRadius={'$12'}
+            overflow="hidden"
+            maxWidth={Platform.OS === 'web' ? 600 : '100%'}
+            width="100%"
+            position="relative">
             <Input
               borderColor={'$borderColor'}
               onChangeText={(text) => setSerachTerm(text)}
@@ -71,6 +81,9 @@ export default function Home() {
               backgroundColor={'#ECE6F0'}
               placeholder="Busque o nome do pássaro"
               placeholderTextColor={'#49454F'}
+              height={48}
+              fontSize={16}
+              paddingRight={40}
             />
             <Image
               source={require('../assets/icons/search.png')}
@@ -83,10 +96,23 @@ export default function Home() {
           </View>
         </View>
         {searchTerm.length > 2 && (
-          <>
+          <View
+            width="100%"
+            overflow="hidden"
+            alignSelf="center"
+            height={400}
+            position="relative"
+            zIndex={0}
+            maxWidth={Platform.OS === 'web' ? 600 : '100%'}>
             {results?.length > 0 ? (
               <FlashList
                 estimatedItemSize={20}
+                width="100%"
+                showsVerticalScrollIndicator={true}
+                contentContainerStyle={{
+                  paddingRight: 10,
+                  width: '100%',
+                }}
                 renderItem={({ item, index }) => {
                   if (typeof item === 'string') {
                     return (
@@ -105,7 +131,8 @@ export default function Home() {
                       justifyContent="space-around"
                       alignItems="flex-start"
                       borderRadius={0}
-                      backgroundColor={'transparent'}
+                      height={60}
+                      backgroundColor={index % 2 === 0 ? '#FFFBF7' : '#ECE6F0'}
                       flexDirection="column"
                       marginBottom="$2"
                       display="flex"
@@ -124,7 +151,7 @@ export default function Home() {
             ) : (
               <Text marginTop={'$4'}>Nenhum resultado encontrado</Text>
             )}
-          </>
+          </View>
         )}
       </YStack>
     </View>

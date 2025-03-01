@@ -3,7 +3,7 @@ import { TamaguiProvider } from '@tamagui/core';
 import { QueryClientProvider } from '@tanstack/react-query';
 import { useFonts } from 'expo-font';
 import { RootSiblingParent } from 'react-native-root-siblings';
-import { Keyboard, Linking } from 'react-native';
+import { Keyboard, Linking, Platform, useWindowDimensions } from 'react-native';
 import { Stack, SplashScreen, router } from 'expo-router';
 
 import { queryClient } from '~/queryClient';
@@ -12,6 +12,7 @@ import { tamaguiConfig } from '../tamagui.config';
 import { Icon, ThemeProvider } from 'react-native-elements';
 import { PortalProvider } from 'tamagui';
 import Menu from '~/components/Menu';
+import TopMenu from '~/components/TopMenu';
 
 export function useLoadFonts() {
   const [interLoaded, interError] = useFonts({
@@ -41,6 +42,9 @@ export default function RootLayout() {
 
 function Layout() {
   const [isKeyboardVisible, setKeyboardVisible] = useState(false);
+  const { width } = useWindowDimensions();
+  const isLargeScreen = width >= 768;
+
   const keyboardShowListener = Keyboard.addListener('keyboardDidShow', () => {
     setKeyboardVisible(true);
   });
@@ -48,14 +52,17 @@ function Layout() {
     setKeyboardVisible(false);
   });
 
+  const showBottomMenu = !isKeyboardVisible && !isLargeScreen;
+
   return (
     <ThemeProvider>
       <TamaguiProvider config={tamaguiConfig}>
         <PortalProvider>
           <RootSiblingParent>
             <QueryClientProvider client={queryClient}>
+              <TopMenu />
               <Stack />
-              <Menu show={!isKeyboardVisible} />
+              <Menu show={showBottomMenu} />
             </QueryClientProvider>
           </RootSiblingParent>
         </PortalProvider>
