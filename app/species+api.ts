@@ -1,12 +1,67 @@
-import { supabase } from '~/app/db';
+import { db } from '~/db';
+import { isNull, isNotNull } from 'drizzle-orm';
+import { birds as birdsTable, synonymRecords } from '~/db/schema';
 
+// Types matching the new schema
 export interface Bird {
+  id: number;
+  speciesCode: string;
+  cbroCode: string | null;
+  nameSciCbro: string | null;
+  nameSciEbird: string | null;
+  taxonOrder: string | null;
+  family: string | null;
+  genera: string | null;
+  species: string | null;
+  status: string | null;
+  vernacularNames: VernacularName[];
+  synonyms: SynonymWithRecords[];
+}
+
+export interface VernacularName {
+  id: number;
+  speciesCode: string;
+  language: string;
+  name: string;
+  isPrimary: boolean | null;
+  source: string | null;
+}
+
+export interface Synonym {
+  id: string;
+  name: string;
+  birdId: number;
+}
+
+export interface SynonymRecord {
+  id: string;
+  synonymId: string;
+  countryId: number | null;
+  stateId: number | null;
+  cityId: number | null;
+  locationDescription: string | null;
+  region: string | null;
+  collectorId: string | null;
+  collectorName: string | null;
+  informant: string | null;
+  observation: string | null;
+  collectionDate: string | null;
+  state?: { code: string; name: string } | null;
+  city?: { name: string } | null;
+}
+
+export interface SynonymWithRecords extends Synonym {
+  records: SynonymRecord[];
+}
+
+// Legacy interface for backward compatibility with frontend
+export interface BirdLegacy {
   id: number;
   cbro_code: string;
   nvt: string;
-
   name_ptbr: string;
   name_english: string;
+  name_sci: string;
   status: string;
   list_type: string;
   category: string;
@@ -14,7 +69,6 @@ export interface Bird {
   family: string;
   genera: string;
   species: string;
-  name_sci: string;
   name_spanish: string;
   name_german: string;
   name_french: string;
@@ -29,10 +83,23 @@ export interface Bird {
   name_russian: string;
   name_slovak: string;
   name_swedish: string;
+  synonyms: SynonymLegacy[];
 }
 
-export interface BirdWithSynonyms extends Bird {
-  synonyms: Synonym[];
+export interface SynonymLegacy {
+  id: string;
+  name: string;
+  bird_id: number;
+  state: string;
+  city: string;
+  region: string;
+  observation: string;
+  informant: string;
+  collector_id: string;
+  collection_date: string;
+}
+
+export interface BirdWithSynonyms extends BirdLegacy {
   normalizedFields: BirdWithSynonyms;
 }
 
@@ -55,37 +122,104 @@ export enum Criteria {
   name_swedish = 'name_swedish',
 }
 
-export interface Synonym {
-  id: number;
-  name: string;
-  bird_id: string;
-  approval_status: string;
-  approved_by: string;
-  approved_date: string;
-  bird: string;
-  collector_id: string;
-  state: string;
-  city: string;
-  region: string;
-  observation: string;
-  informant: string;
-  collection_date: string;
-  collection_time: string;
-  latitude: string;
-  longitude: string;
+// Helper to get vernacular name by language and source
+function getVernacularName(
+  names: VernacularName[],
+  language: string,
+  source?: string
+): string {
+  const filtered = names.filter((n) => n.language === language);
+  if (source) {
+    const withSource = filtered.find((n) => n.source === source);
+    if (withSource) return withSource.name;
+  }
+  const primary = filtered.find((n) => n.isPrimary);
+  return primary?.name || filtered[0]?.name || '';
+}
+
+// Transform new schema to legacy format for backward compatibility
+function transformToLegacy(bird: Bird): BirdLegacy {
+  const names = bird.vernacularNames || [];
+
+  // Flatten synonyms records into legacy format
+  const legacySynonyms: SynonymLegacy[] = [];
+  for (const synonym of bird.synonyms || []) {
+    for (const record of synonym.records || []) {
+      legacySynonyms.push({
+        id: record.id,
+        name: synonym.name,
+        bird_id: bird.id,
+        state: record.state?.code || '',
+        city: record.city?.name || '',
+        region: record.region || '',
+        observation: record.observation || '',
+        informant: record.informant || '',
+        collector_id: record.collectorId || '',
+        collection_date: record.collectionDate || '',
+      });
+    }
+  }
+
+  return {
+    id: bird.id,
+    cbro_code: bird.cbroCode || '',
+    nvt: bird.speciesCode,
+    name_sci: bird.nameSciCbro || bird.nameSciEbird || '',
+    name_ptbr: getVernacularName(names, 'pt-BR', 'CBRO'),
+    name_english: getVernacularName(names, 'en', 'eBird'),
+    name_spanish: getVernacularName(names, 'es'),
+    name_german: getVernacularName(names, 'de'),
+    name_french: getVernacularName(names, 'fr'),
+    name_danish: getVernacularName(names, 'da'),
+    name_dutch: getVernacularName(names, 'nl'),
+    name_estonian: getVernacularName(names, 'et'),
+    name_finnish: getVernacularName(names, 'fi'),
+    name_hungarian: getVernacularName(names, 'hu'),
+    name_japanese: getVernacularName(names, 'ja'),
+    name_norwegian: getVernacularName(names, 'no'),
+    name_polish: getVernacularName(names, 'pl'),
+    name_russian: getVernacularName(names, 'ru'),
+    name_slovak: getVernacularName(names, 'sk'),
+    name_swedish: getVernacularName(names, 'sv'),
+    status: bird.status || '',
+    list_type: '',
+    category: '',
+    order: bird.taxonOrder || '',
+    family: bird.family || '',
+    genera: bird.genera || '',
+    species: bird.species || '',
+    synonyms: legacySynonyms,
+  };
 }
 
 export const GET = async (): Promise<Response> => {
   try {
-    const { data, error } = await supabase.from('birds').select(`
-        *,
-        synonyms (*)
-      `);
+    // Query only CBRO species (Brazilian birds) - these have vernacular names
+    // Non-CBRO species are in the DB for future use but not needed by the app yet
+    const data = await db.query.birds.findMany({
+      where: isNotNull(birdsTable.cbroCode),
+      with: {
+        vernacularNames: true,
+        synonyms: {
+          with: {
+            records: {
+              where: isNull(synonymRecords.deletedAt),
+              with: {
+                state: true,
+                city: true,
+              },
+            },
+          },
+        },
+      },
+    });
 
-    if (error) throw error;
+    // Transform to legacy format for backward compatibility
+    const legacyData = data.map(transformToLegacy);
 
-    return Response.json(data);
+    return Response.json(legacyData);
   } catch (e: any) {
-    throw new Error(e?.message);
+    console.error('Error fetching species:', e);
+    return Response.json({ error: e?.message }, { status: 500 });
   }
 };
