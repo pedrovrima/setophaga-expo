@@ -1,99 +1,119 @@
-import { getAccessToken } from '~/services/api';
+import { db } from '~/db';
+import { synonyms, synonymRecords, states, cities } from '~/db/schema';
+import { eq, and } from 'drizzle-orm';
 import municipalitys from '~/municipios.json';
-interface NewName {
-  Ave__c: string;
-  dataHoraDaColeta__c: Date;
-  Estado__c: string;
-  GPS_da_Coleta__Latitude__s: number;
-  GPS_da_Coleta__Longitude__s: number;
-  Localidade__c: string;
-  Municipio__c: string;
-  Name: string;
-  OwnerId: string;
-  Pais__c: string;
-  QuemColetou__c: string;
-  quemInformou__c: string;
-  Regiao__c: string;
-  Comentarios__c: string;
-}
 
 export interface RequestBody {
   date: Date;
-  id: string;
-  state: string;
-  location: string;
-  city: string;
-  collectorsId: number;
+  id: number; // bird_id
+  state: string; // state code (e.g., "SP")
+  location: string; // location description
+  city: string; // city name
+  collectorsId: string; // Supabase auth user UUID
   collectorsName: string;
   informer: string;
-  name: string;
+  name: string; // the synonym
   observation: string;
 }
 
-  export const POST = async (request: Request): Promise<Response> => {
+export const POST = async (request: Request): Promise<Response> => {
+  try {
+    const body = (await request.json()) as RequestBody;
 
-    try{
-  const auth = await getAccessToken();
-  const url = 'https://evaldo.my.salesforce.com/services/data/v58.0/sobjects/Musk__c/';
+    // 1. Look up state ID
+    const state = await db.query.states.findFirst({
+      where: eq(states.code, body.state),
+    });
 
-  const body = (await request.json()) as RequestBody;
+    if (!state) {
+      return Response.json({ error: 'Estado não encontrado' }, { status: 400 });
+    }
 
+    // 2. Look up city ID
+    const city = await db.query.cities.findFirst({
+      where: and(eq(cities.stateId, state.id), eq(cities.name, body.city)),
+    });
 
+    if (!city) {
+      return Response.json({ error: 'Cidade não encontrada' }, { status: 400 });
+    }
 
-  const data = {
-    Ave__c: body.id,
-    dataHoraDaColeta__c: new Date(),
-    Estado__c: body.state,
-    // GPS_da_Coleta__Latitude__s: -23.5505,
-    // GPS_da_Coleta__Longitude__s: -46.6333,
-    Localidade__c: body.location,
-    Municipio__c: body.city,
-    Name: body.name,
-    OwnerId: '0054w00000D61yRAAR',
-    Pais__c: 'Brazil',
-    ColetorName__c: body.collectorsName,
-    ColetorId__c: body.collectorsId,
-    QuemInformou__c: body.informer,
-    Regiao__c: municipalitys.municipios.find((mun) => mun['UF-sigla'] === body.state)?.[
-      'regiao-nome'
-    ],
-    Comentarios__c: body.observation,
-  };
+    // 3. Get country ID (Brazil = 1, assuming it's the first country seeded)
+    const country = await db.query.countries.findFirst({
+      where: (c, { eq }) => eq(c.code, 'BRA'),
+    });
 
+    const countryId = country?.id || 1;
 
-  const search = await fetch(
-    'https://evaldo.my.salesforce.com/services/data/v58.0/query?q=SELECT+Id+FROM+Musk__c+WHERE+Name+=+' +
-      `'${body.name}'&Ave__c=${body.id}&Municipio__c=${body.city}&Estado__c=${body.state}`,
-      {
-        method: 'GET',
-        headers: {
-          Authorization: `Bearer ${auth?.access_token}`,
-        },
+    // 4. Check if synonym already exists for this bird
+    let synonym = await db.query.synonyms.findFirst({
+      where: and(eq(synonyms.name, body.name), eq(synonyms.birdId, body.id)),
+    });
+
+    // 5. Check if this exact record already exists (same synonym + city)
+    if (synonym) {
+      const existingRecord = await db.query.synonymRecords.findFirst({
+        where: and(
+          eq(synonymRecords.synonymId, synonym.id),
+          eq(synonymRecords.cityId, city.id)
+        ),
+      });
+
+      if (existingRecord) {
+        console.log('Registro já existe');
+        return Response.json({ error: 'Registro já existe' }, { status: 409 });
       }
-  );
+    }
 
-  const searchResponse = await search.json();
+    // 6. Create synonym if it doesn't exist
+    if (!synonym) {
+      const [newSynonym] = await db
+        .insert(synonyms)
+        .values({
+          name: body.name,
+          birdId: body.id,
+        })
+        .returning();
+      synonym = newSynonym;
+    }
 
-  if(searchResponse.totalSize > 0) {  
-    console.log('Registro já existe')
-    return new Response('Registro já existe', { status: 409 });
+    // 7. Get region from municipality data
+    const region = municipalitys.municipios.find(
+      (mun) => mun['UF-sigla'] === body.state
+    )?.['regiao-nome'];
+
+    // 8. Create the synonym record
+    const [newRecord] = await db
+      .insert(synonymRecords)
+      .values({
+        synonymId: synonym.id,
+        countryId,
+        stateId: state.id,
+        cityId: city.id,
+        locationDescription: body.location,
+        region: region || null,
+        collectorId: body.collectorsId || null,
+        collectorName: body.collectorsName,
+        informant: body.informer,
+        observation: body.observation,
+        collectionDate: new Date().toISOString().split('T')[0],
+        syncedAt: new Date(), // Mark as synced since it's being created online
+      })
+      .returning();
+
+    return Response.json(
+      {
+        success: true,
+        synonymId: synonym.id,
+        recordId: newRecord.id,
+      },
+      { status: 201 }
+    );
+  } catch (error: any) {
+    console.error('Error creating synonym:', error);
+    return Response.json(
+      { error: error?.message || 'Erro ao cadastrar' },
+      { status: 500 }
+    );
   }
-
-
-  const postData = {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${auth?.access_token}`,
-    },
-    body: JSON.stringify(data),
-  };
-
-  const response = await fetch(url, postData);
-
-  return response;
-} catch (error) {
-  console.log(error);
-  return new Response('Erro ao cadastrar', { status: 500 });
-}
 };

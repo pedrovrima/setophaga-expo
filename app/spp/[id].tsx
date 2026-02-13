@@ -57,10 +57,13 @@ export default function Species() {
   const thisSpecies = sppDataQuery?.data?.find((spp) => '' + spp.id === id) as
     | BirdWithSynonyms
     | undefined;
-  let words = thisSpecies?.name_sci.split(' ');
-  console.log(words);
 
-  let species = words![0][0] + '. ' + words![1];
+  if (!thisSpecies) {
+    return <Text>Espécie não encontrada</Text>;
+  }
+
+  let words = thisSpecies.name_sci?.split(' ');
+  let species = words && words.length >= 2 ? words[0][0] + '. ' + words[1] : thisSpecies.name_sci || '';
   return (
     <>
       <Stack.Screen options={{ title: thisSpecies?.name_sci, headerShown: false }} />
