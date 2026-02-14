@@ -1,8 +1,3 @@
-import { db } from '~/db';
-import { isNull, isNotNull } from 'drizzle-orm';
-import { birds as birdsTable, synonymRecords } from '~/db/schema';
-
-// Types matching the new schema
 export interface Bird {
   id: number;
   speciesCode: string;
@@ -54,7 +49,6 @@ export interface SynonymWithRecords extends Synonym {
   records: SynonymRecord[];
 }
 
-// Legacy interface for backward compatibility with frontend
 export interface BirdLegacy {
   id: number;
   cbro_code: string;
@@ -100,7 +94,7 @@ export interface SynonymLegacy {
 }
 
 export interface BirdWithSynonyms extends BirdLegacy {
-  normalizedFields: BirdWithSynonyms;
+  normalizedFields?: BirdWithSynonyms;
 }
 
 export enum Criteria {
@@ -122,26 +116,24 @@ export enum Criteria {
   name_swedish = 'name_swedish',
 }
 
-// Helper to get vernacular name by language and source
-function getVernacularName(
+export function getVernacularName(
   names: VernacularName[],
   language: string,
   source?: string
 ): string {
-  const filtered = names.filter((n) => n.language === language);
+  const filtered = names.filter((name) => name.language === language);
   if (source) {
-    const withSource = filtered.find((n) => n.source === source);
+    const withSource = filtered.find((name) => name.source === source);
     if (withSource) return withSource.name;
   }
-  const primary = filtered.find((n) => n.isPrimary);
+
+  const primary = filtered.find((name) => name.isPrimary);
   return primary?.name || filtered[0]?.name || '';
 }
 
-// Transform new schema to legacy format for backward compatibility
-function transformToLegacy(bird: Bird): BirdLegacy {
+export function transformToLegacy(bird: Bird): BirdLegacy {
   const names = bird.vernacularNames || [];
 
-  // Flatten synonyms records into legacy format
   const legacySynonyms: SynonymLegacy[] = [];
   for (const synonym of bird.synonyms || []) {
     for (const record of synonym.records || []) {
@@ -191,35 +183,3 @@ function transformToLegacy(bird: Bird): BirdLegacy {
     synonyms: legacySynonyms,
   };
 }
-
-export const GET = async (): Promise<Response> => {
-  try {
-    // Query only CBRO species (Brazilian birds) - these have vernacular names
-    // Non-CBRO species are in the DB for future use but not needed by the app yet
-    const data = await db.query.birds.findMany({
-      where: isNotNull(birdsTable.cbroCode),
-      with: {
-        vernacularNames: true,
-        synonyms: {
-          with: {
-            records: {
-              where: isNull(synonymRecords.deletedAt),
-              with: {
-                state: true,
-                city: true,
-              },
-            },
-          },
-        },
-      },
-    });
-
-    // Transform to legacy format for backward compatibility
-    const legacyData = data.map(transformToLegacy);
-
-    return Response.json(legacyData);
-  } catch (e: any) {
-    console.error('Error fetching species:', e);
-    return Response.json({ error: e?.message }, { status: 500 });
-  }
-};

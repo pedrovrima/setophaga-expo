@@ -1,33 +1,18 @@
-import { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { FlashList } from '@shopify/flash-list';
 import { isMobile } from 'react-device-detect';
 
-import { Stack, Link, router } from 'expo-router';
-import {
-  Text,
-  Input,
-  XStack,
-  YStack,
-  H4,
-  SizableText,
-  View,
-  Button,
-  ButtonIcon,
-  Image,
-} from 'tamagui';
+import { Stack, router } from 'expo-router';
+import { Text, Input, YStack, H4, View, Button, Image } from 'tamagui';
 
-import useSpeciesSearch from '~/hooks/useSpeciesSearch';
-import useSpeciesData from '~/hooks/useSpeciesData';
-import { ScreenHeight, ScreenWidth } from 'react-native-elements/dist/helpers';
-import Menu from '~/components/Menu';
-import { Linking } from 'react-native';
-import { Platform } from 'react-native';
+import useSearch from '~/hooks/useSearch';
+import { Linking, Platform } from 'react-native';
 
 export default function Home() {
-  const query = useSpeciesData();
-
-  const [searchTerm, setSerachTerm] = useState('');
-  const [results, isLoading] = useSpeciesSearch(query.data, searchTerm);
+  const [searchTerm, setSearchTerm] = useState('');
+  const searchQuery = useSearch(searchTerm);
+  const results = searchQuery.data?.results ?? [];
+  const isInitialLoading = searchQuery.isLoading && results.length === 0;
 
   const openIfCan = async () => {
     const can = await Linking.canOpenURL('setophaga-expo://');
@@ -38,8 +23,9 @@ export default function Home() {
 
   useEffect(() => {
     openIfCan();
-    console.log('Linking.openURL');
   }, []);
+
+  const shouldShowResults = searchTerm.trim().length > 2;
 
   return (
     <View flex={1} alignItems="center" backgroundColor={'#FFFBF7'} paddingHorizontal={20}>
@@ -76,7 +62,7 @@ export default function Home() {
             position="relative">
             <Input
               borderColor={'$borderColor'}
-              onChangeText={(text) => setSerachTerm(text)}
+              onChangeText={setSearchTerm}
               value={searchTerm}
               backgroundColor={'#ECE6F0'}
               placeholder="Busque o nome do pássaro"
@@ -95,7 +81,8 @@ export default function Home() {
             />
           </View>
         </View>
-        {searchTerm.length > 2 && (
+
+        {shouldShowResults && (
           <View
             width="100%"
             overflow="hidden"
@@ -104,14 +91,14 @@ export default function Home() {
             position="relative"
             zIndex={0}
             maxWidth={Platform.OS === 'web' ? 600 : '100%'}>
-            {results?.length > 0 ? (
+            {isInitialLoading ? (
+              <Text marginTop={'$4'}>Buscando...</Text>
+            ) : results.length > 0 ? (
               <FlashList
                 estimatedItemSize={20}
-                width="100%"
                 showsVerticalScrollIndicator={true}
                 contentContainerStyle={{
                   paddingRight: 10,
-                  width: '100%',
                 }}
                 renderItem={({ item, index }) => {
                   if (typeof item === 'string') {
@@ -121,9 +108,15 @@ export default function Home() {
                       </H4>
                     );
                   }
+
                   return (
                     <Button
-                      onPress={() => router.push(`spp/${item.id}`)}
+                      onPress={() =>
+                        router.push({
+                          pathname: '/spp/[id]',
+                          params: { id: String(item.id) },
+                        })
+                      }
                       width="100%"
                       alignSelf="stretch"
                       paddingHorizontal="$2"
@@ -138,10 +131,10 @@ export default function Home() {
                       display="flex"
                       gap="$0">
                       <Text padding={0} margin={0} fontWeight={'bold'}>
-                        {item?.stringFound}
+                        {item.stringFound}
                       </Text>
                       <Text padding={0} margin={0} fontStyle="italic">
-                        {item?.scientificName}
+                        {item.scientificName}
                       </Text>
                     </Button>
                   );

@@ -1,24 +1,24 @@
 import { Session } from '@supabase/supabase-js';
 import { useLocalSearchParams, Stack, router } from 'expo-router';
-import { useEffect, useState, useCallback } from 'react';
-import { useForm, Controller, set } from 'react-hook-form';
-import { Dimensions, Alert } from 'react-native';
-import { View, Input, XStack, YStack, Text, Button, H3, Label, TextArea } from 'tamagui';
+import { useEffect, useState } from 'react';
+import { useForm, Controller } from 'react-hook-form';
+import { Alert } from 'react-native';
+import { View, Input, XStack, YStack, Text, Button, TextArea } from 'tamagui';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
-import { NetworkStateType, getNetworkStateAsync } from 'expo-network';
+import { getNetworkStateAsync } from 'expo-network';
 
 import Select from '~/components/Select';
 import Authentication from '~/components/screens/Authentication';
 import useCreateName from '~/hooks/useCreateName';
-import useSpeciesData from '~/hooks/useSpeciesData';
+import useSpeciesDetail from '~/hooks/useSpeciesDetail';
 import { municipios } from '~/municipios.json';
 import { supabase } from '~/app/db';
 import { ScreenHeight } from 'react-native-elements/dist/helpers';
 import { Icon } from 'react-native-elements';
 import LoadingDialog from '~/components/LoadingDialog';
 
-const stateCities = municipios.reduce((red: {}, mun) => {
+const stateCities = municipios.reduce<Record<string, string[]>>((red, mun) => {
   if (red[mun['UF-sigla']]) {
     red[mun['UF-sigla']].push(mun['municipio-nome']);
   } else {
@@ -28,7 +28,7 @@ const stateCities = municipios.reduce((red: {}, mun) => {
 }, {});
 
 export default function Details() {
-  const { id } = useLocalSearchParams();
+  const { id } = useLocalSearchParams<{ id?: string }>();
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(false);
 
@@ -41,30 +41,29 @@ export default function Details() {
           setLoading(false);
         }
       })
-      .catch((err) => {
-        console.log(err);
+      .catch((error: unknown) => {
+        console.log(error);
       });
 
     supabase.auth
       .getSession()
-      .then(({ data: { session } }) => {
+      .then(({ data: { session } }: { data: { session: Session | null } }) => {
         setSession(session);
         AsyncStorage.setItem('session', JSON.stringify(session));
         setLoading(false);
       })
-      .catch((err) => {
-        console.log(err);
+      .catch((error: unknown) => {
+        console.log(error);
         setLoading(false);
       });
 
-    supabase.auth.onAuthStateChange((_event, session) => {
+    supabase.auth.onAuthStateChange((_event: string, session: Session | null) => {
       setSession(session);
       setLoading(false);
     });
   }, []);
 
-  const species = useSpeciesData();
-  const thisSpp = species?.data?.find((spp) => '' + spp.Evaldo__c === id);
+  const { data: thisSpp } = useSpeciesDetail(id);
   const createNameMutations = useCreateName();
   const states = municipios.reduce((red: string[], mun) => {
     if (red.find((m) => m === mun['UF-sigla'])) {
@@ -83,12 +82,17 @@ export default function Details() {
     watch,
   } = useForm();
   const onSubmit = async (data: any) => {
+    if (!thisSpp) {
+      Alert.alert('Erro', 'Espécie não encontrada');
+      return;
+    }
+
     const networkStatus = await getNetworkStateAsync();
 
     if (!networkStatus.isConnected) {
       const dataToSave = {
         ...getValues(),
-        id: thisSpp?.Id,
+        id: thisSpp.id,
         collectorsId: session?.user.id,
         collectorsName:
           session?.user.user_metadata.firstName + ' ' + session?.user.user_metadata.lastName,
@@ -108,13 +112,13 @@ export default function Details() {
 
     const _data = {
       ...data,
-      id: thisSpp?.Id,
+      id: thisSpp.id,
       collectorsId: session?.user.id,
       collectorsName:
         session?.user.user_metadata.firstName + ' ' + session?.user.user_metadata.lastName,
     };
 
-    const mutation = createNameMutations.mutate(_data);
+    createNameMutations.mutate(_data);
   };
 
   useEffect(() => {
@@ -161,13 +165,13 @@ export default function Details() {
               <Text fontWeight="bold" textTransform="uppercase">
                 Nome Científico
               </Text>
-              <Text fontStyle="italic">{thisSpp?.Name}</Text>
+              <Text fontStyle="italic">{thisSpp?.name_sci || 'Carregando...'}</Text>
             </YStack>
             <YStack>
               <Text fontWeight="bold" textTransform="uppercase">
                 CBRO
               </Text>
-              <Text>{thisSpp?.NVP__c}</Text>
+              <Text>{thisSpp?.name_ptbr || 'Carregando...'}</Text>
             </YStack>
             {/* Form Girdileri */}
             <YStack>
@@ -243,6 +247,7 @@ export default function Details() {
                     {...field}
                     label={'Estado'}
                     items={states.sort()}
+                    disabled={false}
                     placeholder="Selecione o estado"
                     changeCallback={() => setValue('city', '')}
                     backgroundColor={'transparent'}
