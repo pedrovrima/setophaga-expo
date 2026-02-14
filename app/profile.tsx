@@ -1,45 +1,69 @@
 import { Session } from '@supabase/supabase-js';
-import { useLocalSearchParams, Stack, router } from 'expo-router';
+import { Stack, router } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { useForm, Controller, set } from 'react-hook-form';
-import { Dimensions, Alert } from 'react-native';
-import {
-  View,
-  Input,
-  XStack,
-  YStack,
-  Text,
-  Button,
-  H3,
-  Label,
-  Spinner,
-  Image,
-  ScrollView,
-} from 'tamagui';
+import { Alert } from 'react-native';
+import { XStack, YStack, Text, Button, H3, Spinner, Image, ScrollView } from 'tamagui';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 
-import Select from '~/components/Select';
 import Authentication from '~/components/screens/Authentication';
 import useCreateName from '~/hooks/useCreateName';
-import useSpeciesData from '~/hooks/useSpeciesData';
-import { municipios } from '~/municipios.json';
 import { supabase } from '~/app/db';
 import { ScreenHeight, ScreenWidth } from 'react-native-elements/dist/helpers';
 import { Icon } from 'react-native-elements';
 import LoadingDialog from '~/components/LoadingDialog';
 import { useQuery } from '@tanstack/react-query';
+import { getSpeciesById } from '~/services/api';
+
+type OfflineRecord = {
+  id: number;
+  name: string;
+  state: string;
+  city: string;
+  location: string;
+  informer: string;
+  observation?: string;
+};
 
 export default function Profile() {
-  const speciesData = useSpeciesData();
-  const { id } = useLocalSearchParams();
-  const offlineData = useQuery({
+  const offlineData = useQuery<OfflineRecord[]>({
     queryKey: ['offlineData'],
     queryFn: async () => {
       const data = await AsyncStorage.getItem('offlineData');
       if (!data) return [];
 
-      return await JSON.parse(data);
+      return JSON.parse(data);
+    },
+  });
+
+  const offlineSpeciesNames = useQuery<Record<number, string>>({
+    queryKey: [
+      'offline-species-names',
+      (offlineData.data || [])
+        .map((item) => Number(item.id))
+        .filter((value) => Number.isInteger(value))
+        .sort((left, right) => left - right)
+        .join(','),
+    ],
+    enabled: !!offlineData.data?.length,
+    queryFn: async () => {
+      const ids = Array.from(
+        new Set((offlineData.data || []).map((item) => Number(item.id)))
+      ).filter((value) => Number.isInteger(value) && value > 0);
+
+      const names = await Promise.all(
+        ids.map(async (speciesId) => {
+          try {
+            const species = await getSpeciesById(speciesId);
+            const label = species.name_ptbr || species.name_sci || `ID ${speciesId}`;
+            return [speciesId, label] as const;
+          } catch {
+            return [speciesId, `ID ${speciesId}`] as const;
+          }
+        })
+      );
+
+      return Object.fromEntries(names);
     },
   });
 
@@ -48,58 +72,37 @@ export default function Profile() {
 
   useEffect(() => {
     setLoading(true);
+
     AsyncStorage.getItem('session')
       .then((data) => {
         if (data) {
-          setSession(JSON.parse(data || ''));
+          setSession(JSON.parse(data));
           setLoading(false);
         }
       })
-      .catch((err) => {
-        console.log(err);
+      .catch((error) => {
+        console.log(error);
       });
 
     supabase.auth
       .getSession()
-      .then(({ data: { session } }) => {
+      .then(({ data: { session } }: { data: { session: Session | null } }) => {
         setSession(session);
         AsyncStorage.setItem('session', JSON.stringify(session));
         setLoading(false);
       })
-      .catch((err) => {
-        console.log(err);
+      .catch((error: unknown) => {
+        console.log(error);
         setLoading(false);
       });
 
-    supabase.auth.onAuthStateChange((_event, session) => {
-      setSession(session);
+    supabase.auth.onAuthStateChange((_event: string, currentSession: Session | null) => {
+      setSession(currentSession);
       setLoading(false);
     });
   }, []);
 
-  const species = useSpeciesData();
-  const thisSpp = species?.data?.find((spp) => '' + spp.Evaldo__c === id);
   const createNameMutations = useCreateName();
-  const states = municipios.reduce((red: string[], mun) => {
-    if (red.find((m) => m === mun['UF-sigla'])) {
-      return red;
-    }
-    const uf = mun['UF-sigla'];
-    return [...red, uf];
-  }, []);
-
-  const {
-    control,
-    handleSubmit,
-    formState: { errors },
-    setValue,
-    getValues,
-    watch,
-  } = useForm();
-
-  // const cities = (state) =>
-  //   states &&
-  //   municipios.filter((mun) => mun['UF-sigla'] === state).map((mun) => mun['municipio-nome']);
 
   return (
     <ScrollView backgroundColor={'#FFFBF7'} paddingTop={60} paddingHorizontal={12}>
@@ -115,9 +118,10 @@ export default function Profile() {
           onPress={() => router.back()}
         />
         <Text flex={2} wordWrap="normal" fontSize={22}>
-          Perfil{' '}
+          Perfil
         </Text>
       </XStack>
+
       <KeyboardAwareScrollView scrollEnabled={false}>
         {session?.user.id || loading ? (
           <YStack height={ScreenHeight}>
@@ -139,18 +143,20 @@ export default function Profile() {
               }}>
               Sair
             </Button>
+
             <YStack marginTop={'$8'} marginBottom={'$8'}>
               <H3>Dados Salvos</H3>
-              {offlineData.isPending || speciesData.isLoading ? (
+              {offlineData.isPending || offlineSpeciesNames.isPending ? (
                 <Spinner />
-              ) : offlineData?.data?.length > 0 ? (
+              ) : offlineData.data && offlineData.data.length > 0 ? (
                 <>
-                  {offlineData?.data?.map((value) => {
+                  {offlineData.data.map((value) => {
+                    const speciesLabel =
+                      offlineSpeciesNames.data?.[Number(value.id)] || `ID ${value.id}`;
+
                     return (
-                      <YStack key={value.name} marginTop={'$4'}>
-                        <Text>
-                          Espécie: {speciesData.data.find((spp) => spp.Id === value.id)?.NVP__c}
-                        </Text>
+                      <YStack key={`${value.id}-${value.name}-${value.city}`} marginTop={'$4'}>
+                        <Text>Espécie: {speciesLabel}</Text>
                         <Text>Nome: {value.name}</Text>
                         <Text>Estado: {value.state}</Text>
                         <Text>Cidade: {value.city}</Text>
@@ -163,27 +169,28 @@ export default function Profile() {
                             color={'white'}
                             width={'$10'}
                             onPress={async () => {
-                              const data = {
+                              const payload = {
                                 ...value,
                                 collectorsId: session?.user.id,
-                                collectorsName:
-                                  session?.user.user_metadata.firstName +
-                                  ' ' +
-                                  session?.user.user_metadata.lastName,
+                                collectorsName: `${session?.user.user_metadata.firstName} ${session?.user.user_metadata.lastName}`,
                               };
-                              createNameMutations.mutate(data, {
-                                onSuccess: async (response, vara, t) => {
+
+                              createNameMutations.mutate(payload, {
+                                onSuccess: async (response) => {
                                   if (response.status === 409) {
                                     Alert.alert('Erro', 'Nome já cadastrado para este municipio');
                                     return;
                                   }
-                                  const fitlered = offlineData.data.filter(
-                                    (v) => v.name !== value.name
+
+                                  const filtered = (offlineData.data || []).filter(
+                                    (item) => item.name !== value.name
                                   );
 
-                                  Alert.alert('Sucesso', 'Nome cadasrtado com sucesso');
-
-                                  AsyncStorage.setItem('offlineData', JSON.stringify(fitlered));
+                                  Alert.alert('Sucesso', 'Nome cadastrado com sucesso');
+                                  await AsyncStorage.setItem(
+                                    'offlineData',
+                                    JSON.stringify(filtered)
+                                  );
                                   offlineData.refetch();
                                 },
                                 onError: (error) => {
@@ -193,17 +200,18 @@ export default function Profile() {
                             }}>
                             Enviar
                           </Button>
+
                           <Button
                             borderRadius={'$12'}
                             borderColor={'#6750A4'}
                             color={'#6750A4'}
                             backgroundColor={'transparent'}
                             width={'$10'}
-                            onPress={() => {
-                              const fitlered = offlineData.data.filter(
-                                (v) => v.name !== value.name
+                            onPress={async () => {
+                              const filtered = (offlineData.data || []).filter(
+                                (item) => item.name !== value.name
                               );
-                              AsyncStorage.setItem('offlineData', JSON.stringify(fitlered));
+                              await AsyncStorage.setItem('offlineData', JSON.stringify(filtered));
                               offlineData.refetch();
                             }}>
                             Apagar
@@ -217,6 +225,7 @@ export default function Profile() {
                 <Text>Nenhum dado salvo</Text>
               )}
             </YStack>
+
             <YStack>
               <H3>Ficha Técnia</H3>
 
@@ -228,7 +237,6 @@ export default function Profile() {
                   gap={'$2'}
                   marginBottom={'$4'}>
                   <Image source={require('../assets/avistar.png')} height={50} width={100} />
-
                   <Image source={require('../assets/oama.png')} height={50} width={90} />
                   <Image source={require('../assets/evaldo.png')} height={60} width={60} />
                 </XStack>
@@ -245,7 +253,3 @@ export default function Profile() {
     </ScrollView>
   );
 }
-
-const ErrorText = ({ children }: { children: React.ReactNode }) => {
-  return <Text color={'red'}>{children}</Text>;
-};
