@@ -6,6 +6,7 @@ import { useEffect } from 'react';
 import * as Linking from 'expo-linking';
 
 import useSpeciesDetail from '~/hooks/useSpeciesDetail';
+import LoadingSpinner from '~/components/LoadingSpinner';
 import { languageDictionary } from '~/services/searchMetadata';
 
 export const languageFlags = {
@@ -48,7 +49,11 @@ export default function Species() {
   }, [querySuccess]);
 
   if (speciesQuery.isLoading) {
-    return <Text>Carregando espécie...</Text>;
+    return (
+      <View flex={1} alignItems="center" justifyContent="center" backgroundColor={'#FFFBF7'}>
+        <LoadingSpinner />
+      </View>
+    );
   }
 
   if (speciesQuery.isError || !speciesQuery.data) {

@@ -99,6 +99,8 @@ export default function useSearch(term: string) {
 
   const total = (tier1.data?.total ?? 0) + (tier2.data?.total ?? 0) + (tier3.data?.total ?? 0);
 
+  const isDebouncing = normalizedTerm !== debouncedTerm;
+
   return {
     data: {
       query: debouncedTerm,
@@ -107,6 +109,7 @@ export default function useSearch(term: string) {
     } satisfies SearchResponse,
     isLoading: tier1.isLoading,
     isFetching: tier1.isFetching || tier2.isFetching || tier3.isFetching,
+    isPending: isDebouncing || tier1.isFetching,
     isSuccess: tier1.isSuccess,
     isError: tier1.isError || tier2.isError || tier3.isError,
     error: tier1.error || tier2.error || tier3.error,
