@@ -11,7 +11,7 @@ import { Linking, Platform } from 'react-native';
 export default function Home() {
   const [searchTerm, setSearchTerm] = useState('');
   const searchQuery = useSearch(searchTerm);
-  const results = searchQuery.data?.results ?? [];
+  const results = searchQuery.data.results;
   const isInitialLoading = searchQuery.isLoading && results.length === 0;
 
   const openIfCan = async () => {

@@ -13,9 +13,13 @@ interface SalesforceAccessToken {
 
 export const searchSpecies = async (
   query: string,
+  tier: 1 | 2 | 3,
   signal?: AbortSignal
 ): Promise<SearchResponse> => {
-  const response = await fetch(`/search?q=${encodeURIComponent(query)}&limit=120`, { signal });
+  const response = await fetch(
+    `/search?q=${encodeURIComponent(query)}&limit=120&tier=${tier}`,
+    { signal }
+  );
 
   if (!response.ok) {
     throw new Error(`Erro ao buscar espécies: ${response.status}`);
