@@ -6,13 +6,14 @@ import { Stack, router } from 'expo-router';
 import { Text, Input, YStack, H4, View, Button, Image } from 'tamagui';
 
 import useSearch from '~/hooks/useSearch';
+import LoadingSpinner from '~/components/LoadingSpinner';
 import { Linking, Platform } from 'react-native';
 
 export default function Home() {
   const [searchTerm, setSearchTerm] = useState('');
   const searchQuery = useSearch(searchTerm);
   const results = searchQuery.data.results;
-  const isInitialLoading = searchQuery.isLoading && results.length === 0;
+  const isLoading = searchQuery.isPending;
 
   const openIfCan = async () => {
     const can = await Linking.canOpenURL('setophaga-expo://');
@@ -91,8 +92,10 @@ export default function Home() {
             position="relative"
             zIndex={0}
             maxWidth={Platform.OS === 'web' ? 600 : '100%'}>
-            {isInitialLoading ? (
-              <Text marginTop={'$4'}>Buscando...</Text>
+            {isLoading ? (
+              <View marginTop={'$4'} alignItems="center">
+                <LoadingSpinner />
+              </View>
             ) : results.length > 0 ? (
               <FlashList
                 estimatedItemSize={20}

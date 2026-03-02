@@ -7,6 +7,7 @@ import { useEffect } from 'react';
 import * as Linking from 'expo-linking';
 
 import useSpeciesDetail from '~/hooks/useSpeciesDetail';
+import LoadingSpinner from '~/components/LoadingSpinner';
 import { languageDictionary } from '~/services/searchMetadata';
 import { speciesTokens as t } from '~/src/theme/speciesTokens';
 
@@ -53,7 +54,7 @@ export default function Species() {
   if (speciesQuery.isLoading) {
     return (
       <View flex={1} backgroundColor={t.colors.bg} justifyContent="center" alignItems="center">
-        <Text color={t.colors.textMuted}>Carregando espécie...</Text>
+        <LoadingSpinner />
       </View>
     );
   }
