@@ -4,7 +4,6 @@ import { db } from '~/db';
 import { birds as birdsTable, synonyms, vernacularNames } from '~/db/schema';
 import {
   languageDictionary,
-  searchCriteriaOrder,
   type SearchCriteria,
   type SearchResponse,
   type SearchResultItem,
@@ -16,6 +15,28 @@ const MIN_QUERY_LENGTH = 3;
 const DEFAULT_LIMIT = 120;
 const MAX_LIMIT = 200;
 const CANDIDATE_LIMIT = 160;
+
+type Tier = 1 | 2 | 3;
+
+const tierCriteria: Record<Tier, SearchCriteria[]> = {
+  1: ['name_ptbr'],
+  2: ['synonyms', 'name_english', 'name_spanish'],
+  3: [
+    'name_danish',
+    'name_dutch',
+    'name_estonian',
+    'name_finnish',
+    'name_french',
+    'name_german',
+    'name_hungarian',
+    'name_japanese',
+    'name_norwegian',
+    'name_polish',
+    'name_russian',
+    'name_slovak',
+    'name_swedish',
+  ],
+};
 
 const criteriaLanguageMap: Record<
   Exclude<SearchCriteria, 'name_ptbr' | 'synonyms'>,
@@ -38,6 +59,12 @@ const criteriaLanguageMap: Record<
   name_swedish: ['sv'],
 };
 
+const tierLanguages: Record<Tier, string[]> = {
+  1: ['pt-BR'],
+  2: ['en', 'es'],
+  3: ['da', 'nl', 'et', 'fi', 'fr', 'de', 'hu', 'ja', 'no', 'pl', 'ru', 'sk', 'sv'],
+};
+
 const normalizeForSearch = (value: string) =>
   value
     .normalize('NFD')
@@ -52,32 +79,60 @@ const parseLimit = (value: string | null) => {
   return Math.min(Math.max(Math.floor(numeric), 1), MAX_LIMIT);
 };
 
-const isUnaccentError = (error: unknown) => {
-  const message = String((error as any)?.message || '').toLowerCase();
-  return message.includes('function unaccent') || message.includes('unaccent(');
+const parseTier = (value: string | null): Tier => {
+  const numeric = Number(value);
+  if (numeric === 1 || numeric === 2 || numeric === 3) return numeric;
+  return 1;
 };
 
-const buildCandidatesQueryWithUnaccent = (pattern: string) => {
-  const vernacularSubquery = db
-    .selectDistinct({ speciesCode: vernacularNames.speciesCode })
-    .from(vernacularNames)
-    .where(sql`unaccent(lower(${vernacularNames.name})) like unaccent(lower(${pattern}))`);
+const isUnaccentError = (error: unknown) => {
+  const message = String((error as any)?.message || '').toLowerCase();
+  return (
+    message.includes('function unaccent') ||
+    message.includes('unaccent(') ||
+    message.includes('immutable_unaccent')
+  );
+};
 
-  const synonymsSubquery = db
-    .selectDistinct({ birdId: synonyms.birdId })
-    .from(synonyms)
-    .where(sql`unaccent(lower(${synonyms.name})) like unaccent(lower(${pattern}))`);
+const buildCandidatesQueryWithUnaccent = (pattern: string, tier: Tier) => {
+  const conditions = [];
+
+  // Scientific name search only in tier 1
+  if (tier === 1) {
+    conditions.push(
+      sql`immutable_unaccent(lower(coalesce(${birdsTable.nameSciCbro}, ''))) like immutable_unaccent(lower(${pattern}))`,
+      sql`immutable_unaccent(lower(coalesce(${birdsTable.nameSciEbird}, ''))) like immutable_unaccent(lower(${pattern}))`
+    );
+  }
+
+  // Vernacular names filtered by tier languages
+  const languages = tierLanguages[tier];
+  if (languages.length > 0) {
+    const vernacularSubquery = db
+      .selectDistinct({ speciesCode: vernacularNames.speciesCode })
+      .from(vernacularNames)
+      .where(
+        and(
+          inArray(vernacularNames.language, languages),
+          sql`immutable_unaccent(lower(${vernacularNames.name})) like immutable_unaccent(lower(${pattern}))`
+        )
+      );
+    conditions.push(inArray(birdsTable.speciesCode, vernacularSubquery));
+  }
+
+  // Synonyms only in tier 2
+  if (tier === 2) {
+    const synonymsSubquery = db
+      .selectDistinct({ birdId: synonyms.birdId })
+      .from(synonyms)
+      .where(
+        sql`immutable_unaccent(lower(${synonyms.name})) like immutable_unaccent(lower(${pattern}))`
+      );
+    conditions.push(inArray(birdsTable.id, synonymsSubquery));
+  }
 
   return db.query.birds.findMany({
-    where: and(
-      isNotNull(birdsTable.cbroCode),
-      or(
-        sql`unaccent(lower(coalesce(${birdsTable.nameSciCbro}, ''))) like unaccent(lower(${pattern}))`,
-        sql`unaccent(lower(coalesce(${birdsTable.nameSciEbird}, ''))) like unaccent(lower(${pattern}))`,
-        inArray(birdsTable.speciesCode, vernacularSubquery),
-        inArray(birdsTable.id, synonymsSubquery)
-      )
-    ),
+    where: and(isNotNull(birdsTable.cbroCode), or(...conditions)),
     columns: {
       id: true,
       nameSciCbro: true,
@@ -107,27 +162,35 @@ const buildCandidatesQueryWithUnaccent = (pattern: string) => {
   });
 };
 
-const buildCandidatesQueryFallback = (pattern: string) => {
-  const vernacularSubquery = db
-    .selectDistinct({ speciesCode: vernacularNames.speciesCode })
-    .from(vernacularNames)
-    .where(ilike(vernacularNames.name, pattern));
+const buildCandidatesQueryFallback = (pattern: string, tier: Tier) => {
+  const conditions = [];
 
-  const synonymsSubquery = db
-    .selectDistinct({ birdId: synonyms.birdId })
-    .from(synonyms)
-    .where(ilike(synonyms.name, pattern));
+  if (tier === 1) {
+    conditions.push(
+      ilike(birdsTable.nameSciCbro, pattern),
+      ilike(birdsTable.nameSciEbird, pattern)
+    );
+  }
+
+  const languages = tierLanguages[tier];
+  if (languages.length > 0) {
+    const vernacularSubquery = db
+      .selectDistinct({ speciesCode: vernacularNames.speciesCode })
+      .from(vernacularNames)
+      .where(and(inArray(vernacularNames.language, languages), ilike(vernacularNames.name, pattern)));
+    conditions.push(inArray(birdsTable.speciesCode, vernacularSubquery));
+  }
+
+  if (tier === 2) {
+    const synonymsSubquery = db
+      .selectDistinct({ birdId: synonyms.birdId })
+      .from(synonyms)
+      .where(ilike(synonyms.name, pattern));
+    conditions.push(inArray(birdsTable.id, synonymsSubquery));
+  }
 
   return db.query.birds.findMany({
-    where: and(
-      isNotNull(birdsTable.cbroCode),
-      or(
-        ilike(birdsTable.nameSciCbro, pattern),
-        ilike(birdsTable.nameSciEbird, pattern),
-        inArray(birdsTable.speciesCode, vernacularSubquery),
-        inArray(birdsTable.id, synonymsSubquery)
-      )
-    ),
+    where: and(isNotNull(birdsTable.cbroCode), or(...conditions)),
     columns: {
       id: true,
       nameSciCbro: true,
@@ -216,14 +279,15 @@ const getCriterionMatch = (
 const toSearchResponse = (
   query: string,
   candidates: CandidateBird[],
-  resultLimit: number
+  resultLimit: number,
+  criteria: SearchCriteria[]
 ): SearchResponse => {
   const normalizedQuery = normalizeForSearch(query);
 
   const results: SearchResults = [];
   let total = 0;
 
-  for (const criterion of searchCriteriaOrder) {
+  for (const criterion of criteria) {
     if (total >= resultLimit) break;
 
     const seenBirds = new Set<number>();
@@ -260,6 +324,7 @@ export const GET = async (request: Request): Promise<Response> => {
   const url = new URL(request.url);
   const query = (url.searchParams.get('q') || '').trim();
   const resultLimit = parseLimit(url.searchParams.get('limit'));
+  const tier = parseTier(url.searchParams.get('tier'));
 
   if (query.length < MIN_QUERY_LENGTH) {
     return Response.json({
@@ -275,14 +340,14 @@ export const GET = async (request: Request): Promise<Response> => {
     let rows;
 
     try {
-      rows = await buildCandidatesQueryWithUnaccent(pattern);
+      rows = await buildCandidatesQueryWithUnaccent(pattern, tier);
     } catch (error) {
       if (!isUnaccentError(error)) {
         throw error;
       }
 
-      console.warn('unaccent extension is not available; using ilike fallback for search');
-      rows = await buildCandidatesQueryFallback(pattern);
+      console.warn('immutable_unaccent not available; using ilike fallback for search');
+      rows = await buildCandidatesQueryFallback(pattern, tier);
     }
 
     const candidates: CandidateBird[] = rows.map((row) => ({
@@ -292,7 +357,8 @@ export const GET = async (request: Request): Promise<Response> => {
       synonyms: row.synonyms,
     }));
 
-    const response = toSearchResponse(query, candidates, resultLimit);
+    const criteria = tierCriteria[tier];
+    const response = toSearchResponse(query, candidates, resultLimit, criteria);
     return Response.json(response);
   } catch (error: any) {
     console.error('Error searching species:', error);

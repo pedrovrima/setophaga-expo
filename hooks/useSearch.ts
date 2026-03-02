@@ -1,9 +1,11 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { keepPreviousData, useQuery } from '@tanstack/react-query';
 
 import { searchSpecies } from '~/services/api';
+import type { SearchResponse, SearchResultItem, SearchResults } from '~/services/searchMetadata';
 
 const SEARCH_DEBOUNCE_MS = 250;
+const MIN_QUERY_LENGTH = 3;
 
 const useDebouncedValue = (value: string, delay: number) => {
   const [debouncedValue, setDebouncedValue] = useState(value);
@@ -19,15 +21,94 @@ const useDebouncedValue = (value: string, delay: number) => {
   return debouncedValue;
 };
 
+const mergeResults = (
+  tier1?: SearchResponse,
+  tier2?: SearchResponse,
+  tier3?: SearchResponse
+): SearchResults => {
+  const seenIds = new Set<number>();
+  const merged: SearchResults = [];
+
+  for (const tierData of [tier1, tier2, tier3]) {
+    if (!tierData) continue;
+
+    for (const item of tierData.results) {
+      if (typeof item === 'string') {
+        merged.push(item);
+      } else {
+        if (!seenIds.has(item.id)) {
+          seenIds.add(item.id);
+          merged.push(item);
+        }
+      }
+    }
+  }
+
+  // Remove category headers that ended up with no items after dedup
+  const cleaned: SearchResults = [];
+  for (let i = 0; i < merged.length; i++) {
+    const item = merged[i];
+    if (typeof item === 'string') {
+      // Check if the next item is a result (not another header or end of array)
+      const hasItems =
+        i + 1 < merged.length && typeof merged[i + 1] !== 'string';
+      if (hasItems) {
+        cleaned.push(item);
+      }
+    } else {
+      cleaned.push(item);
+    }
+  }
+
+  return cleaned;
+};
+
 export default function useSearch(term: string) {
   const normalizedTerm = term.trim();
   const debouncedTerm = useDebouncedValue(normalizedTerm, SEARCH_DEBOUNCE_MS);
+  const enabled = debouncedTerm.length >= MIN_QUERY_LENGTH;
 
-  return useQuery({
-    queryKey: ['species-search', debouncedTerm],
-    queryFn: ({ signal }) => searchSpecies(debouncedTerm, signal),
-    enabled: debouncedTerm.length >= 3,
+  const tier1 = useQuery({
+    queryKey: ['species-search', debouncedTerm, 1],
+    queryFn: ({ signal }) => searchSpecies(debouncedTerm, 1, signal),
+    enabled,
     staleTime: 30_000,
     placeholderData: keepPreviousData,
   });
+
+  const tier2 = useQuery({
+    queryKey: ['species-search', debouncedTerm, 2],
+    queryFn: ({ signal }) => searchSpecies(debouncedTerm, 2, signal),
+    enabled: enabled && tier1.isSuccess,
+    staleTime: 30_000,
+    placeholderData: keepPreviousData,
+  });
+
+  const tier3 = useQuery({
+    queryKey: ['species-search', debouncedTerm, 3],
+    queryFn: ({ signal }) => searchSpecies(debouncedTerm, 3, signal),
+    enabled: enabled && tier2.isSuccess,
+    staleTime: 30_000,
+    placeholderData: keepPreviousData,
+  });
+
+  const results = useMemo(
+    () => mergeResults(tier1.data, tier2.data, tier3.data),
+    [tier1.data, tier2.data, tier3.data]
+  );
+
+  const total = (tier1.data?.total ?? 0) + (tier2.data?.total ?? 0) + (tier3.data?.total ?? 0);
+
+  return {
+    data: {
+      query: debouncedTerm,
+      total,
+      results,
+    } satisfies SearchResponse,
+    isLoading: tier1.isLoading,
+    isFetching: tier1.isFetching || tier2.isFetching || tier3.isFetching,
+    isSuccess: tier1.isSuccess,
+    isError: tier1.isError || tier2.isError || tier3.isError,
+    error: tier1.error || tier2.error || tier3.error,
+  };
 }
