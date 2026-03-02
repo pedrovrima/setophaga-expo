@@ -5,6 +5,12 @@ import { Button, Input, Text, View, YStack } from 'tamagui';
 import { supabase } from '~/app/db';
 import LoadingDialog from './LoadingDialog';
 
+const webOrigin = (process.env.EXPO_PUBLIC_WEB_ORIGIN || 'https://xara-roan.vercel.app').replace(
+  /\/$/,
+  ''
+);
+const resetPasswordRedirectTo = `${webOrigin}/reset-password`;
+
 export default function ForgotPassword({ setType }: { setType: (type: string) => void }) {
   const {
     control,
@@ -88,7 +94,7 @@ export default function ForgotPassword({ setType }: { setType: (type: string) =>
           onPress={handleSubmit(async (data) => {
             setLoading(true);
             const { error, data: datum } = await supabase.auth.resetPasswordForEmail(data.email, {
-              redirectTo: 'http://localhost:8081/reset-password',
+              redirectTo: resetPasswordRedirectTo,
             });
             setLoading(false);
 
