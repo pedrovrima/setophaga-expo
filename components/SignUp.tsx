@@ -6,6 +6,12 @@ import { supabase } from '~/app/db';
 import LoadingDialog from './LoadingDialog';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 
+const webOrigin = (process.env.EXPO_PUBLIC_WEB_ORIGIN || 'https://xara-roan.vercel.app').replace(
+  /\/$/,
+  ''
+);
+const emailRedirectTo = `${webOrigin}/auth-callback`;
+
 export default function SignUp({ setType }: { setType: (type: string) => void }) {
   const {
     control,
@@ -166,6 +172,7 @@ export default function SignUp({ setType }: { setType: (type: string) => void })
                 email: email,
                 password: password,
                 options: {
+                  emailRedirectTo,
                   data: {
                     firstName: name,
                     lastName,

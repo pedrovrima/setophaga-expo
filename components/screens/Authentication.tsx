@@ -1,6 +1,8 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Alert, StyleSheet, View, AppState, Dimensions } from 'react-native';
 import { Button, Input, Image, Label } from 'tamagui';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { usePathname, useLocalSearchParams } from 'expo-router';
 
 import { supabase } from '../../app/db';
 import { YStack } from 'tamagui';
@@ -22,8 +24,18 @@ AppState.addEventListener('change', (state) => {
 
 export default function Authentication() {
   let ScreenHeight = Dimensions.get('window').height;
+  const pathname = usePathname();
+  const searchParams = useLocalSearchParams();
 
   const [type, setType] = useState('');
+
+  useEffect(() => {
+    const query = Object.entries(searchParams)
+      .map(([k, v]) => `${k}=${v}`)
+      .join('&');
+    const fullPath = query ? `${pathname}?${query}` : pathname;
+    AsyncStorage.setItem('authReturnPath', fullPath);
+  }, [pathname, searchParams]);
 
   if (type === '') {
     return (
