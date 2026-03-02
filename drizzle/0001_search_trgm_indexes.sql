@@ -1,3 +1,5 @@
+CREATE EXTENSION IF NOT EXISTS unaccent SCHEMA public;
+--> statement-breakpoint
 CREATE EXTENSION IF NOT EXISTS pg_trgm;
 --> statement-breakpoint
 CREATE OR REPLACE FUNCTION immutable_unaccent(text) RETURNS text AS $$
