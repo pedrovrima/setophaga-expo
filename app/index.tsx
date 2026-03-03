@@ -155,7 +155,7 @@ export default function Home() {
           <Stack.Screen options={{ title: 'Home', headerShown: false }} />
           <Image source={require('../assets/logo.png')} height={48} width={140} resizeMode="contain" />
         </View>
-        <Text textAlign="center" color={t.colors.textMuted} marginBottom={20}>
+        <Text textAlign="left" color={t.colors.textMuted} marginBottom={20} alignSelf="stretch">
           popular - vernáculo - científico
         </Text>
         <View
@@ -296,11 +296,11 @@ export default function Home() {
                 }}
               />
             ) : (
-              <View marginTop="$4" alignItems="center" gap="$2">
-                <Text color={t.colors.textMuted} textAlign="center">
+              <View marginTop="$4" alignItems="flex-start" gap="$2">
+                <Text color={t.colors.textMuted} textAlign="left">
                   Nenhum resultado para "{trimmedSearch}"
                 </Text>
-                <Text color={t.colors.textMuted} fontSize={14} textAlign="center">
+                <Text color={t.colors.textMuted} fontSize={14} textAlign="left">
                   Tente o nome científico ou popular da espécie.
                 </Text>
               </View>
