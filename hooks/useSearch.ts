@@ -26,41 +26,21 @@ const mergeResults = (
   tier2?: SearchResponse,
   tier3?: SearchResponse
 ): SearchResults => {
-  const seenIds = new Set<number>();
+  const seenIds = new Set<string>();
   const merged: SearchResults = [];
 
   for (const tierData of [tier1, tier2, tier3]) {
     if (!tierData) continue;
 
     for (const item of tierData.results) {
-      if (typeof item === 'string') {
+      if (!seenIds.has(item.id)) {
+        seenIds.add(item.id);
         merged.push(item);
-      } else {
-        if (!seenIds.has(item.id)) {
-          seenIds.add(item.id);
-          merged.push(item);
-        }
       }
     }
   }
 
-  // Remove category headers that ended up with no items after dedup
-  const cleaned: SearchResults = [];
-  for (let i = 0; i < merged.length; i++) {
-    const item = merged[i];
-    if (typeof item === 'string') {
-      // Check if the next item is a result (not another header or end of array)
-      const hasItems =
-        i + 1 < merged.length && typeof merged[i + 1] !== 'string';
-      if (hasItems) {
-        cleaned.push(item);
-      }
-    } else {
-      cleaned.push(item);
-    }
-  }
-
-  return cleaned;
+  return merged;
 };
 
 export default function useSearch(term: string) {
@@ -97,7 +77,7 @@ export default function useSearch(term: string) {
     [tier1.data, tier2.data, tier3.data]
   );
 
-  const total = (tier1.data?.total ?? 0) + (tier2.data?.total ?? 0) + (tier3.data?.total ?? 0);
+  const total = results.length;
 
   const isDebouncing = normalizedTerm !== debouncedTerm;
 

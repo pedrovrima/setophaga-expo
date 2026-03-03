@@ -41,12 +41,15 @@ export const searchCriteriaOrder: SearchCriteria[] = [
 ];
 
 export type SearchResultItem = {
-  id: number;
+  id: string;
+  primaryName: string;
   scientificName: string;
-  stringFound: string;
+  language?: string;
+  isCBRO?: boolean;
+  matchType: 'exact' | 'partial' | 'scientific' | 'fuzzy';
 };
 
-export type SearchResults = Array<string | SearchResultItem>;
+export type SearchResults = SearchResultItem[];
 
 export interface SearchResponse {
   query: string;

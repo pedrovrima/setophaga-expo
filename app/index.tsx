@@ -1,13 +1,123 @@
-import { useEffect, useState } from 'react';
+import { Fragment, useEffect, useMemo, useState } from 'react';
 import { FlashList } from '@shopify/flash-list';
 
 import { Stack, router } from 'expo-router';
 import { Pressable, Linking, Platform, useWindowDimensions } from 'react-native';
-import { Text, Input, YStack, H4, View, Button, Image } from 'tamagui';
+import { Text, Input, YStack, View, Button, Image } from 'tamagui';
 
 import useSearch from '~/hooks/useSearch';
 import LoadingSpinner from '~/components/LoadingSpinner';
+import type { SearchResultItem } from '~/services/searchMetadata';
 import { tokens as t } from '~/src/theme/tokens';
+
+type SearchRow =
+  | {
+      type: 'section';
+      key: string;
+      title: 'CBRO' | 'Outros resultados';
+      count: number;
+      countLabel: 'resultados' | 'encontrados';
+      hasTopGap: boolean;
+    }
+  | {
+      type: 'item';
+      key: string;
+      result: SearchResultItem;
+    }
+  | {
+      type: 'divider';
+      key: string;
+    };
+
+const stripDiacritics = (value: string) =>
+  value.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+
+const highlightMatch = (text: string, query: string) => {
+  const normalizedQuery = stripDiacritics(query.trim().toLowerCase());
+  if (!normalizedQuery) return text;
+
+  const normalizedText = stripDiacritics(text.toLowerCase());
+  const startIndex = normalizedText.indexOf(normalizedQuery);
+
+  if (startIndex < 0) return text;
+
+  const endIndex = startIndex + normalizedQuery.length;
+  const before = text.slice(0, startIndex);
+  const match = text.slice(startIndex, endIndex);
+  const after = text.slice(endIndex);
+
+  return (
+    <Fragment>
+      {before}
+      <Text color="#6B4EFF" fontWeight="600">
+        {match}
+      </Text>
+      {after}
+    </Fragment>
+  );
+};
+
+const getMeta = (result: SearchResultItem): string | null => {
+  if (result.isCBRO) return null;
+
+  if (result.matchType === 'scientific') {
+    return 'científico';
+  }
+
+  const languageMap: Record<string, string> = {
+    pt: 'português',
+    en: 'inglês',
+    es: 'espanhol',
+  };
+
+  const lang = result.language ? languageMap[result.language] ?? result.language : null;
+  return lang ? `${lang} • nome comum` : 'nome comum';
+};
+
+const buildRows = (results: SearchResultItem[]): SearchRow[] => {
+  const cbro = results.filter((item) => item.isCBRO);
+  const others = results.filter((item) => !item.isCBRO);
+
+  const rows: SearchRow[] = [];
+
+  const appendSection = (
+    section: 'CBRO' | 'Outros resultados',
+    items: SearchResultItem[],
+    countLabel: 'resultados' | 'encontrados',
+    hasTopGap: boolean
+  ) => {
+    if (items.length === 0) return;
+
+    rows.push({
+      type: 'section',
+      key: `section-${section}`,
+      title: section,
+      count: items.length,
+      countLabel,
+      hasTopGap,
+    });
+
+    items.forEach((result, index) => {
+      rows.push({
+        type: 'item',
+        key: `item-${section}-${result.id}`,
+        result,
+      });
+
+      if (index < items.length - 1) {
+        rows.push({
+          type: 'divider',
+          key: `divider-${section}-${result.id}-${index}`,
+        });
+      }
+    });
+  };
+
+  appendSection('CBRO', cbro, 'resultados', false);
+  appendSection('Outros resultados', others, 'encontrados', cbro.length > 0);
+
+  return rows;
+};
 
 export default function Home() {
   const [searchTerm, setSearchTerm] = useState('');
@@ -28,6 +138,8 @@ export default function Home() {
   }, []);
 
   const shouldShowResults = searchTerm.trim().length > 2;
+  const rows = useMemo(() => buildRows(results), [results]);
+  const trimmedSearch = searchTerm.trim();
 
   return (
     <View flex={1} alignItems="center" backgroundColor={t.colors.bg} paddingHorizontal={t.spacing.screenX}>
@@ -121,62 +233,72 @@ export default function Home() {
               </View>
             ) : results.length > 0 ? (
               <FlashList
-                estimatedItemSize={70}
+                estimatedItemSize={64}
                 showsVerticalScrollIndicator={true}
                 contentContainerStyle={{
-                  paddingRight: 10,
                   paddingTop: 8,
+                  paddingHorizontal: 16,
+                  paddingBottom: 24,
                 }}
+                data={rows}
+                keyExtractor={(item) => item.key}
                 renderItem={({ item }) => {
-                  if (typeof item === 'string') {
+                  if (item.type === 'section') {
                     return (
-                      <H4 marginTop="$4" marginBottom="$2" fontWeight="bold" color={t.colors.text}>
-                        {item}
-                      </H4>
+                      <View
+                        marginTop={item.hasTopGap ? 24 : 0}
+                        marginBottom={8}
+                        flexDirection="row"
+                        justifyContent="space-between"
+                        alignItems="center">
+                        <Text fontSize={14} fontWeight="700" color="#111">
+                          {item.title}
+                        </Text>
+                        <Text fontSize={12} color="#666">
+                          {item.count} {item.countLabel}
+                        </Text>
+                      </View>
                     );
                   }
 
+                  if (item.type === 'divider') {
+                    return <View height={1} backgroundColor="#EEE" />;
+                  }
+
+                  const result = item.result;
+                  const meta = getMeta(result);
+
                   return (
-                    <Button
+                    <Pressable
                       onPress={() =>
                         router.push({
                           pathname: '/spp/[id]',
-                          params: { id: String(item.id) },
+                          params: { id: result.id },
                         })
                       }
-                      width="100%"
-                      alignSelf="stretch"
-                      paddingHorizontal={t.spacing.cardPad}
-                      paddingVertical={12}
-                      justifyContent="center"
-                      alignItems="flex-start"
-                      borderRadius={t.radii.card}
-                      backgroundColor={t.colors.surface}
-                      flexDirection="column"
-                      marginBottom={8}
-                      display="flex"
-                      gap={2}
-                      elevation={1}
-                      shadowColor="rgba(0,0,0,0.08)"
-                      shadowOffset={{ width: 0, height: 1 }}
-                      shadowRadius={4}
-                      borderWidth={1}
-                      borderColor={t.colors.borderSoft}>
-                      <Text padding={0} margin={0} fontWeight="bold" color={t.colors.text}>
-                        {item.stringFound}
-                      </Text>
-                      <Text padding={0} margin={0} fontStyle="italic" color={t.colors.textMuted}>
-                        {item.scientificName}
-                      </Text>
-                    </Button>
+                      accessibilityRole="button"
+                      accessibilityLabel={`Abrir espécie ${result.primaryName}`}>
+                      <View paddingVertical={13}>
+                        <Text fontSize={16} fontWeight="600" color="#111">
+                          {highlightMatch(result.primaryName, trimmedSearch)}
+                        </Text>
+                        <Text fontSize={13} color="#666" fontStyle="italic" marginTop={2}>
+                          {result.scientificName}
+                        </Text>
+                        {meta && (
+                          <Text fontSize={12} color="#999" marginTop={2}>
+                            {meta}
+                          </Text>
+                        )}
+                      </View>
+                    </Pressable>
                   );
                 }}
-                data={results}
               />
             ) : (
               <View marginTop="$4" alignItems="center" gap="$2">
                 <Text color={t.colors.textMuted} textAlign="center">
-                  Nenhum resultado para "{searchTerm.trim()}"
+                  Nenhum resultado para "{trimmedSearch}"
                 </Text>
                 <Text color={t.colors.textMuted} fontSize={14} textAlign="center">
                   Tente o nome científico ou popular da espécie.
