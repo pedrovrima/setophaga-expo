@@ -155,7 +155,7 @@ export default function Home() {
           <Stack.Screen options={{ title: 'Home', headerShown: false }} />
           <Image source={require('../assets/logo.png')} height={48} width={140} resizeMode="contain" />
         </View>
-        <Text textAlign="left" color={t.colors.textMuted} marginBottom={20} alignSelf="stretch">
+        <Text textAlign="center" color={t.colors.textMuted} marginBottom={20}>
           popular - vernáculo - científico
         </Text>
         <View
@@ -270,6 +270,7 @@ export default function Home() {
 
                   return (
                     <Pressable
+                      style={{ width: '100%' }}
                       onPress={() =>
                         router.push({
                           pathname: '/spp/[id]',
@@ -278,15 +279,15 @@ export default function Home() {
                       }
                       accessibilityRole="button"
                       accessibilityLabel={`Abrir espécie ${result.primaryName}`}>
-                      <View paddingVertical={13}>
-                        <Text fontSize={16} fontWeight="600" color="#111">
+                      <View paddingVertical={13} alignItems="flex-start">
+                        <Text fontSize={16} fontWeight="600" color="#111" textAlign="left">
                           {highlightMatch(result.primaryName, trimmedSearch)}
                         </Text>
-                        <Text fontSize={13} color="#666" fontStyle="italic" marginTop={2}>
+                        <Text fontSize={13} color="#666" fontStyle="italic" marginTop={2} textAlign="left">
                           {result.scientificName}
                         </Text>
                         {meta && (
-                          <Text fontSize={12} color="#999" marginTop={2}>
+                          <Text fontSize={12} color="#999" marginTop={2} textAlign="left">
                             {meta}
                           </Text>
                         )}
@@ -296,11 +297,11 @@ export default function Home() {
                 }}
               />
             ) : (
-              <View marginTop="$4" alignItems="flex-start" gap="$2">
-                <Text color={t.colors.textMuted} textAlign="left">
+              <View marginTop="$4" alignItems="center" gap="$2">
+                <Text color={t.colors.textMuted} textAlign="center">
                   Nenhum resultado para "{trimmedSearch}"
                 </Text>
-                <Text color={t.colors.textMuted} fontSize={14} textAlign="left">
+                <Text color={t.colors.textMuted} fontSize={14} textAlign="center">
                   Tente o nome científico ou popular da espécie.
                 </Text>
               </View>
