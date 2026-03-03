@@ -3,16 +3,18 @@ import { TamaguiProvider } from '@tamagui/core';
 import { QueryClientProvider } from '@tanstack/react-query';
 import { useFonts } from 'expo-font';
 import { RootSiblingParent } from 'react-native-root-siblings';
-import { Keyboard, Linking, Platform, useWindowDimensions } from 'react-native';
+import { Keyboard, useWindowDimensions } from 'react-native';
 import { Stack, SplashScreen, router } from 'expo-router';
+import { View, Text, Button } from 'tamagui';
 
 import { queryClient } from '~/queryClient';
 
 import { tamaguiConfig } from '../tamagui.config';
-import { Icon, ThemeProvider } from 'react-native-elements';
+import { ThemeProvider } from 'react-native-elements';
 import { PortalProvider } from 'tamagui';
 import Menu from '~/components/Menu';
 import TopMenu from '~/components/TopMenu';
+import { tokens as t } from '~/src/theme/tokens';
 
 export function useLoadFonts() {
   const [interLoaded, interError] = useFonts({
@@ -23,12 +25,57 @@ export function useLoadFonts() {
   return [interLoaded, interError];
 }
 
+// Error Boundary component
+class ErrorBoundary extends React.Component<
+  { children: React.ReactNode },
+  { hasError: boolean }
+> {
+  constructor(props: { children: React.ReactNode }) {
+    super(props);
+    this.state = { hasError: false };
+  }
+
+  static getDerivedStateFromError() {
+    return { hasError: true };
+  }
+
+  componentDidCatch(error: Error, info: React.ErrorInfo) {
+    console.error('App Error:', error, info);
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        <View flex={1} backgroundColor={t.colors.bg} justifyContent="center" alignItems="center" padding={t.spacing.screenX}>
+          <Text fontSize={18} fontWeight="bold" color={t.colors.text} marginBottom={8}>
+            Algo deu errado
+          </Text>
+          <Text color={t.colors.textMuted} textAlign="center" marginBottom={16}>
+            Ocorreu um erro inesperado. Tente novamente.
+          </Text>
+          <Button
+            borderRadius={t.radii.pill}
+            backgroundColor={t.colors.primary}
+            color={t.colors.textOnPrimary}
+            onPress={() => {
+              this.setState({ hasError: false });
+              router.replace('/');
+            }}>
+            Voltar ao início
+          </Button>
+        </View>
+      );
+    }
+
+    return this.props.children;
+  }
+}
+
 export default function RootLayout() {
   const [interLoaded, interError] = useLoadFonts();
 
   useEffect(() => {
     if (interLoaded || interError) {
-      // Hide the splash screen after the fonts have loaded (or an error was returned) and the UI is ready.
       SplashScreen.hideAsync();
     }
   }, [interLoaded, interError]);
@@ -45,28 +92,37 @@ function Layout() {
   const { width } = useWindowDimensions();
   const isLargeScreen = width >= 768;
 
-  const keyboardShowListener = Keyboard.addListener('keyboardDidShow', () => {
-    setKeyboardVisible(true);
-  });
-  const keyboardHideListener = Keyboard.addListener('keyboardDidHide', () => {
-    setKeyboardVisible(false);
-  });
+  useEffect(() => {
+    const showSubscription = Keyboard.addListener('keyboardDidShow', () => {
+      setKeyboardVisible(true);
+    });
+    const hideSubscription = Keyboard.addListener('keyboardDidHide', () => {
+      setKeyboardVisible(false);
+    });
+
+    return () => {
+      showSubscription.remove();
+      hideSubscription.remove();
+    };
+  }, []);
 
   const showBottomMenu = !isKeyboardVisible && !isLargeScreen;
 
   return (
-    <ThemeProvider>
-      <TamaguiProvider config={tamaguiConfig}>
-        <PortalProvider>
-          <RootSiblingParent>
-            <QueryClientProvider client={queryClient}>
-              <TopMenu />
-              <Stack />
-              <Menu show={showBottomMenu} />
-            </QueryClientProvider>
-          </RootSiblingParent>
-        </PortalProvider>
-      </TamaguiProvider>
-    </ThemeProvider>
+    <ErrorBoundary>
+      <ThemeProvider>
+        <TamaguiProvider config={tamaguiConfig}>
+          <PortalProvider>
+            <RootSiblingParent>
+              <QueryClientProvider client={queryClient}>
+                <TopMenu />
+                <Stack />
+                <Menu show={showBottomMenu} />
+              </QueryClientProvider>
+            </RootSiblingParent>
+          </PortalProvider>
+        </TamaguiProvider>
+      </ThemeProvider>
+    </ErrorBoundary>
   );
 }

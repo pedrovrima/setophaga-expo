@@ -1,19 +1,17 @@
-import { Session } from '@supabase/supabase-js';
 import { Stack, router } from 'expo-router';
-import { useEffect, useState } from 'react';
 import { Alert } from 'react-native';
-import { XStack, YStack, Text, Button, H3, Spinner, Image, ScrollView } from 'tamagui';
+import { XStack, YStack, Text, Button, H3, Spinner, Image, ScrollView, View } from 'tamagui';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 
 import Authentication from '~/components/screens/Authentication';
+import ScreenHeader from '~/components/ScreenHeader';
 import useCreateName from '~/hooks/useCreateName';
+import useSessionAuth from '~/hooks/useSessionAuth';
 import { supabase } from '~/app/db';
-import { ScreenHeight, ScreenWidth } from 'react-native-elements/dist/helpers';
-import { Icon } from 'react-native-elements';
-import LoadingDialog from '~/components/LoadingDialog';
 import { useQuery } from '@tanstack/react-query';
 import { getSpeciesById } from '~/services/api';
+import LoadingDialog from '~/components/LoadingDialog';
+import { tokens as t } from '~/src/theme/tokens';
 
 type OfflineRecord = {
   id: number;
@@ -31,7 +29,6 @@ export default function Profile() {
     queryFn: async () => {
       const data = await AsyncStorage.getItem('offlineData');
       if (!data) return [];
-
       return JSON.parse(data);
     },
   });
@@ -67,189 +64,201 @@ export default function Profile() {
     },
   });
 
-  const [session, setSession] = useState<Session | null>(null);
-  const [loading, setLoading] = useState(false);
-
-  useEffect(() => {
-    setLoading(true);
-
-    AsyncStorage.getItem('session')
-      .then((data) => {
-        if (data) {
-          setSession(JSON.parse(data));
-          setLoading(false);
-        }
-      })
-      .catch((error) => {
-        console.log(error);
-      });
-
-    supabase.auth
-      .getSession()
-      .then(({ data: { session } }: { data: { session: Session | null } }) => {
-        setSession(session);
-        AsyncStorage.setItem('session', JSON.stringify(session));
-        setLoading(false);
-      })
-      .catch((error: unknown) => {
-        console.log(error);
-        setLoading(false);
-      });
-
-    supabase.auth.onAuthStateChange((_event: string, currentSession: Session | null) => {
-      setSession(currentSession);
-      setLoading(false);
-    });
-  }, []);
-
+  const { session, loading } = useSessionAuth();
   const createNameMutations = useCreateName();
 
   return (
-    <ScrollView backgroundColor={'#FFFBF7'} paddingTop={60} paddingHorizontal={12}>
+    <ScrollView backgroundColor={t.colors.bg} paddingTop={t.spacing.screenTop} paddingHorizontal={t.spacing.screenX}>
       <LoadingDialog loading={createNameMutations.isPending} />
       <Stack.Screen options={{ headerShown: false }} />
 
-      <XStack gap={16}>
-        <Icon
-          style={{ flex: 1 }}
-          name="arrow-back"
-          type="material"
-          color="#6750A4"
-          onPress={() => router.back()}
-        />
-        <Text flex={2} wordWrap="normal" fontSize={22}>
-          Perfil
-        </Text>
-      </XStack>
+      <ScreenHeader title="Perfil" />
 
-      <KeyboardAwareScrollView scrollEnabled={false}>
-        {session?.user.id || loading ? (
-          <YStack height={ScreenHeight}>
-            <H3 marginTop={'$8'}>Usuário</H3>
+      {session?.user.id || loading ? (
+        <YStack flex={1} paddingTop="$4">
+          <LoadingDialog loading={loading} />
 
-            <Text>
-              Nome:{' '}
-              {`${session?.user.user_metadata.firstName} ${session?.user.user_metadata.lastName}`}
+          {/* User Info Card */}
+          <View
+            backgroundColor={t.colors.surface}
+            borderColor={t.colors.borderSoft}
+            borderWidth={1}
+            padding={t.spacing.cardPad}
+            borderRadius={t.radii.card}
+            marginTop="$4">
+            <Text fontSize={18} fontWeight="700" color={t.colors.text}>
+              {session?.user.user_metadata.firstName} {session?.user.user_metadata.lastName}
             </Text>
-            <Text>Email: {session?.user.email}</Text>
+            <Text fontSize={14} color={t.colors.textMuted} marginTop={4}>
+              {session?.user.email}
+            </Text>
             <Button
-              marginTop={'$4'}
-              borderRadius={'$12'}
-              backgroundColor={'#6750A4'}
-              color={'white'}
+              marginTop="$4"
+              borderRadius={t.radii.pill}
+              backgroundColor={t.colors.primary}
+              color={t.colors.textOnPrimary}
               onPress={() => {
                 supabase.auth.signOut();
                 AsyncStorage.removeItem('session');
               }}>
               Sair
             </Button>
+          </View>
 
-            <YStack marginTop={'$8'} marginBottom={'$8'}>
-              <H3>Dados Salvos</H3>
-              {offlineData.isPending || offlineSpeciesNames.isPending ? (
-                <Spinner />
-              ) : offlineData.data && offlineData.data.length > 0 ? (
-                <>
-                  {offlineData.data.map((value) => {
-                    const speciesLabel =
-                      offlineSpeciesNames.data?.[Number(value.id)] || `ID ${value.id}`;
+          {/* Offline Data Section */}
+          <YStack marginTop="$8" marginBottom="$8">
+            <H3 color={t.colors.text}>Dados Salvos</H3>
+            {offlineData.isPending || offlineSpeciesNames.isPending ? (
+              <Spinner />
+            ) : offlineData.data && offlineData.data.length > 0 ? (
+              <YStack gap="$3" marginTop="$3">
+                {offlineData.data.map((value, index) => {
+                  const speciesLabel =
+                    offlineSpeciesNames.data?.[Number(value.id)] || `ID ${value.id}`;
 
-                    return (
-                      <YStack key={`${value.id}-${value.name}-${value.city}`} marginTop={'$4'}>
-                        <Text>Espécie: {speciesLabel}</Text>
-                        <Text>Nome: {value.name}</Text>
-                        <Text>Estado: {value.state}</Text>
-                        <Text>Cidade: {value.city}</Text>
-                        <Text>Local: {value.location}</Text>
-                        <Text>Quem Informou: {value.informer}</Text>
-                        <XStack alignItems="center" marginTop={'$4'} gap={'$4'}>
-                          <Button
-                            borderRadius={'$12'}
-                            backgroundColor={'#6750A4'}
-                            color={'white'}
-                            width={'$10'}
-                            onPress={async () => {
-                              const payload = {
-                                ...value,
-                                collectorsId: session?.user.id,
-                                collectorsName: `${session?.user.user_metadata.firstName} ${session?.user.user_metadata.lastName}`,
-                              };
+                  return (
+                    <View
+                      key={`offline-${index}`}
+                      backgroundColor={t.colors.surface}
+                      borderColor={t.colors.borderSoft}
+                      borderWidth={1}
+                      padding={t.spacing.cardPad}
+                      borderRadius={t.radii.card}>
+                      <Text fontSize={16} fontWeight="600" color={t.colors.text}>
+                        {speciesLabel}
+                      </Text>
+                      <Text fontSize={15} color={t.colors.primary} marginTop={4}>
+                        {value.name}
+                      </Text>
 
-                              createNameMutations.mutate(payload, {
-                                onSuccess: async (response) => {
-                                  if (response.status === 409) {
-                                    Alert.alert('Erro', 'Nome já cadastrado para este municipio');
-                                    return;
-                                  }
+                      <XStack gap="$2" marginTop={8} flexWrap="wrap">
+                        <View
+                          backgroundColor={t.colors.surfaceTint}
+                          paddingHorizontal={10}
+                          paddingVertical={3}
+                          borderRadius={t.radii.pill}>
+                          <Text fontSize={12} color={t.colors.textSecondary}>
+                            {value.state}
+                          </Text>
+                        </View>
+                        <View
+                          backgroundColor={t.colors.surfaceTint}
+                          paddingHorizontal={10}
+                          paddingVertical={3}
+                          borderRadius={t.radii.pill}>
+                          <Text fontSize={12} color={t.colors.textSecondary}>
+                            {value.city}
+                          </Text>
+                        </View>
+                      </XStack>
 
-                                  const filtered = (offlineData.data || []).filter(
-                                    (item) => item.name !== value.name
-                                  );
+                      {value.location && (
+                        <Text fontSize={13} color={t.colors.textMuted} marginTop={8}>
+                          {value.location}
+                        </Text>
+                      )}
+                      <Text fontSize={13} color={t.colors.textMuted} marginTop={4}>
+                        Informante: {value.informer}
+                      </Text>
 
-                                  Alert.alert('Sucesso', 'Nome cadastrado com sucesso');
-                                  await AsyncStorage.setItem(
-                                    'offlineData',
-                                    JSON.stringify(filtered)
-                                  );
-                                  offlineData.refetch();
-                                },
-                                onError: (error) => {
-                                  console.log(error);
-                                },
-                              });
-                            }}>
-                            Enviar
-                          </Button>
+                      <XStack alignItems="center" marginTop="$3" gap="$3">
+                        <Button
+                          borderRadius={t.radii.pill}
+                          backgroundColor={t.colors.primary}
+                          color={t.colors.textOnPrimary}
+                          size="$3"
+                          onPress={async () => {
+                            const payload = {
+                              ...value,
+                              collectorsId: session?.user.id,
+                              collectorsName: `${session?.user.user_metadata.firstName} ${session?.user.user_metadata.lastName}`,
+                            };
 
-                          <Button
-                            borderRadius={'$12'}
-                            borderColor={'#6750A4'}
-                            color={'#6750A4'}
-                            backgroundColor={'transparent'}
-                            width={'$10'}
-                            onPress={async () => {
-                              const filtered = (offlineData.data || []).filter(
-                                (item) => item.name !== value.name
-                              );
-                              await AsyncStorage.setItem('offlineData', JSON.stringify(filtered));
-                              offlineData.refetch();
-                            }}>
-                            Apagar
-                          </Button>
-                        </XStack>
-                      </YStack>
-                    );
-                  })}
-                </>
-              ) : (
-                <Text>Nenhum dado salvo</Text>
-              )}
-            </YStack>
+                            createNameMutations.mutate(payload, {
+                              onSuccess: async (response) => {
+                                if (response.status === 409) {
+                                  Alert.alert('Erro', 'Nome já cadastrado para este municipio');
+                                  return;
+                                }
 
-            <YStack>
-              <H3>Ficha Técnia</H3>
+                                const filtered = (offlineData.data || []).filter(
+                                  (item) => item.name !== value.name
+                                );
 
-              <YStack paddingHorizontal={20} gap="$1" alignItems="flex-start" width={ScreenWidth}>
-                <Text marginBottom="0">Realização</Text>
-                <XStack
-                  alignItems="center"
-                  justifyContent="space-around"
-                  gap={'$2'}
-                  marginBottom={'$4'}>
-                  <Image source={require('../assets/avistar.png')} height={50} width={100} />
-                  <Image source={require('../assets/oama.png')} height={50} width={90} />
-                  <Image source={require('../assets/evaldo.png')} height={60} width={60} />
-                </XStack>
+                                Alert.alert('Sucesso', 'Nome cadastrado com sucesso');
+                                await AsyncStorage.setItem('offlineData', JSON.stringify(filtered));
+                                offlineData.refetch();
+                              },
+                              onError: (error) => {
+                                console.log(error);
+                              },
+                            });
+                          }}>
+                          Enviar
+                        </Button>
+
+                        <Button
+                          borderRadius={t.radii.pill}
+                          borderColor={t.colors.primary}
+                          color={t.colors.primary}
+                          backgroundColor="transparent"
+                          borderWidth={1}
+                          size="$3"
+                          onPress={async () => {
+                            const filtered = (offlineData.data || []).filter(
+                              (item) => item.name !== value.name
+                            );
+                            await AsyncStorage.setItem('offlineData', JSON.stringify(filtered));
+                            offlineData.refetch();
+                          }}>
+                          Apagar
+                        </Button>
+                      </XStack>
+                    </View>
+                  );
+                })}
               </YStack>
-              <Text>Idealizado por: Guto Carvalho</Text>
-              <Text>Desenvolvimento: Evaldo Césari e Pedro Martins</Text>
-              <Text>Design: Julia Morena e Pedro Martins</Text>
-            </YStack>
+            ) : (
+              <View
+                backgroundColor={t.colors.surfaceTint}
+                padding={t.spacing.cardPad}
+                borderRadius={t.radii.card}
+                marginTop="$3"
+                alignItems="center">
+                <Text color={t.colors.textMuted} textAlign="center">
+                  Nenhum dado salvo offline.
+                </Text>
+                <Text color={t.colors.textMuted} fontSize={13} textAlign="center" marginTop={4}>
+                  Registros salvos sem conexão aparecerão aqui.
+                </Text>
+              </View>
+            )}
           </YStack>
-        ) : (
-          <Authentication />
-        )}
-      </KeyboardAwareScrollView>
+
+          {/* Credits */}
+          <YStack marginBottom="$8">
+            <H3 color={t.colors.text}>Ficha Técnica</H3>
+
+            <YStack paddingHorizontal={t.spacing.screenX} gap="$1" alignItems="flex-start" marginTop="$2">
+              <Text marginBottom={0} color={t.colors.textSecondary}>Realização</Text>
+              <XStack
+                alignItems="center"
+                justifyContent="space-around"
+                gap="$2"
+                marginBottom="$4">
+                <Image source={require('../assets/avistar.png')} height={50} width={100} resizeMode="contain" />
+                <Image source={require('../assets/oama.png')} height={50} width={90} resizeMode="contain" />
+                <Image source={require('../assets/evaldo.png')} height={60} width={60} resizeMode="contain" />
+              </XStack>
+            </YStack>
+            <Text color={t.colors.text}>Idealizado por: Guto Carvalho</Text>
+            <Text color={t.colors.text}>Desenvolvimento: Evaldo Césari e Pedro Martins</Text>
+            <Text color={t.colors.text}>Design: Julia Morena e Pedro Martins</Text>
+          </YStack>
+        </YStack>
+      ) : (
+        <Authentication />
+      )}
     </ScrollView>
   );
 }

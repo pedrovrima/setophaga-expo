@@ -1,10 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { useForm, Controller } from 'react-hook-form';
 import { Alert, Platform } from 'react-native';
-import { Button, Input, Text, View, YStack } from 'tamagui';
+import { Button, Text, YStack } from 'tamagui';
 import { supabase } from '~/app/db';
 import LoadingDialog from './LoadingDialog';
+import FloatingLabelInput from './FloatingLabelInput';
+import { tokens as t } from '~/src/theme/tokens';
 import { useRouter } from 'expo-router';
+
 export default function ResetPassword({
   setType,
   token,
@@ -24,17 +27,11 @@ export default function ResetPassword({
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    // Set the session when component mounts
     const setSession = async () => {
-      const {
-        data: { session },
-        error,
-      } = await supabase.auth.setSession({
+      const { error } = await supabase.auth.setSession({
         access_token: token,
         refresh_token: refreshToken,
       });
-
-      console.log(session, error);
 
       if (error) {
         Alert.alert('Erro', 'Link de redefinição inválido ou expirado');
@@ -49,34 +46,23 @@ export default function ResetPassword({
     <>
       <LoadingDialog loading={loading} />
       <YStack gap="$6" width={200} alignItems="center">
-        <Text textAlign="center" color="#49454F">
+        <Text textAlign="center" color={t.colors.textSecondary}>
           Digite sua nova senha
         </Text>
         <YStack justifyContent="flex-start" gap="$4">
           <Controller
             control={control}
-            defaultValue={''}
+            defaultValue=""
             render={({ field }) => (
-              <View position="relative">
-                <Input
-                  {...field}
-                  secureTextEntry={true}
-                  placeholder="Nova senha"
-                  onChangeText={field.onChange}
-                  paddingVertical={12}
-                  paddingLeft={16}
-                  width={'$20'}
-                />
-                <Text
-                  position="absolute"
-                  top={-8}
-                  left={12}
-                  fontSize={12}
-                  color={'#49454F'}
-                  backgroundColor={'#FEF7FF'}>
-                  Nova senha
-                </Text>
-              </View>
+              <FloatingLabelInput
+                label="Nova senha"
+                placeholder="Nova senha"
+                value={field.value}
+                onChangeText={field.onChange}
+                secureTextEntry
+                error={errors.password?.message as string}
+                width="$20"
+              />
             )}
             name="password"
             rules={{
@@ -87,32 +73,20 @@ export default function ResetPassword({
               },
             }}
           />
-          {errors.password && <ErrorText>{errors?.password?.message as string}</ErrorText>}
 
           <Controller
             control={control}
-            defaultValue={''}
+            defaultValue=""
             render={({ field }) => (
-              <View position="relative">
-                <Input
-                  {...field}
-                  secureTextEntry={true}
-                  placeholder="Confirme a nova senha"
-                  onChangeText={field.onChange}
-                  paddingVertical={12}
-                  paddingLeft={16}
-                  width={'$20'}
-                />
-                <Text
-                  position="absolute"
-                  top={-8}
-                  left={12}
-                  fontSize={12}
-                  color={'#49454F'}
-                  backgroundColor={'#FEF7FF'}>
-                  Confirme a nova senha
-                </Text>
-              </View>
+              <FloatingLabelInput
+                label="Confirme a nova senha"
+                placeholder="Confirme a nova senha"
+                value={field.value}
+                onChangeText={field.onChange}
+                secureTextEntry
+                error={errors.confirmPassword?.message as string}
+                width="$20"
+              />
             )}
             name="confirmPassword"
             rules={{
@@ -124,27 +98,24 @@ export default function ResetPassword({
               },
             }}
           />
-          {errors.confirmPassword && (
-            <ErrorText>{errors?.confirmPassword?.message as string}</ErrorText>
-          )}
         </YStack>
 
         <Button
-          borderRadius="$12"
-          color={'#FFF'}
+          borderRadius={t.radii.button}
+          color={t.colors.textOnPrimary}
           paddingHorizontal={24}
           paddingVertical={10}
           fontSize={14}
-          fontWeight={'bold'}
-          width={'$20'}
-          backgroundColor="#6750A4"
+          fontWeight="bold"
+          width="$20"
+          backgroundColor={t.colors.primary}
           onPress={handleSubmit(async (data) => {
             setLoading(true);
             await supabase.auth
               .updateUser({
                 password: data.password,
               })
-              .then((res) => {
+              .then(() => {
                 setLoading(false);
                 alert('Sucesso', 'Senha alterada com sucesso', [
                   { text: 'OK', onPress: () => router.replace('/') },
@@ -162,14 +133,10 @@ export default function ResetPassword({
   );
 }
 
-const ErrorText = ({ children }: { children: React.ReactNode }) => {
-  return <Text color={'red'}>{children}</Text>;
-};
-
 const alertPolyfill = (
   title: string,
   description: string,
-  options: Array<{
+  options?: Array<{
     text: string;
     onPress: () => void;
     style?: string;
@@ -178,10 +145,10 @@ const alertPolyfill = (
   const result = window.confirm([title, description].filter(Boolean).join('\n'));
 
   if (result) {
-    const confirmOption = options.find(({ style }) => style !== 'cancel');
+    const confirmOption = options?.find(({ style }) => style !== 'cancel');
     confirmOption && confirmOption.onPress();
   } else {
-    const cancelOption = options.find(({ style }) => style === 'cancel');
+    const cancelOption = options?.find(({ style }) => style === 'cancel');
     cancelOption && cancelOption.onPress();
   }
 };

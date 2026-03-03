@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Dimensions } from 'react-native';
 import { YStack, Image, Text, Spinner } from 'tamagui';
+import { tokens as t } from '~/src/theme/tokens';
 import { useRouter } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { supabase } from '~/app/db';
@@ -57,7 +58,7 @@ export default function AuthCallbackPage() {
       marginTop={60}
       alignItems="center"
       justifyContent="flex-start"
-      backgroundColor={'#FFFBF7'}
+      backgroundColor={t.colors.bg}
       gap={'$8'}>
       <Image source={require('../assets/logo.png')} height={48 * 2} width={140 * 2} />
       {error ? (
@@ -66,8 +67,8 @@ export default function AuthCallbackPage() {
         </Text>
       ) : (
         <YStack alignItems="center" gap={'$4'}>
-          <Spinner size="large" color="#6750A4" />
-          <Text color="#49454F">Confirmando sua conta...</Text>
+          <Spinner size="large" color={t.colors.primary} />
+          <Text color={t.colors.textSecondary}>Confirmando sua conta...</Text>
         </YStack>
       )}
     </YStack>

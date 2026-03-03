@@ -1,50 +1,50 @@
 import { useEffect, useState } from 'react';
 import { FlashList } from '@shopify/flash-list';
-import { isMobile } from 'react-device-detect';
 
 import { Stack, router } from 'expo-router';
+import { Pressable, Linking, Platform, useWindowDimensions } from 'react-native';
 import { Text, Input, YStack, H4, View, Button, Image } from 'tamagui';
 
 import useSearch from '~/hooks/useSearch';
 import LoadingSpinner from '~/components/LoadingSpinner';
-import { Linking, Platform } from 'react-native';
+import { tokens as t } from '~/src/theme/tokens';
 
 export default function Home() {
   const [searchTerm, setSearchTerm] = useState('');
   const searchQuery = useSearch(searchTerm);
   const results = searchQuery.data.results;
   const isLoading = searchQuery.isPending;
-
-  const openIfCan = async () => {
-    const can = await Linking.canOpenURL('setophaga-expo://');
-    if (can && isMobile) {
-      Linking.openURL('setophaga-expo://');
-    }
-  };
+  const { width } = useWindowDimensions();
+  const isLargeScreen = width >= 768;
 
   useEffect(() => {
+    const openIfCan = async () => {
+      const can = await Linking.canOpenURL('setophaga-expo://');
+      if (can && Platform.OS === 'web') {
+        Linking.openURL('setophaga-expo://');
+      }
+    };
     openIfCan();
   }, []);
 
   const shouldShowResults = searchTerm.trim().length > 2;
 
   return (
-    <View flex={1} alignItems="center" backgroundColor={'#FFFBF7'} paddingHorizontal={20}>
+    <View flex={1} alignItems="center" backgroundColor={t.colors.bg} paddingHorizontal={t.spacing.screenX}>
       <YStack
-        paddingHorizontal={20}
-        paddingTop={60}
+        paddingHorizontal={t.spacing.screenX}
+        paddingTop={40}
         maxWidth={1000}
-        minWidth={!isMobile ? 700 : 'auto'}
+        minWidth={isLargeScreen ? 700 : 'auto'}
         width="100%"
         flex={1}
-        backgroundColor={'#FFFBF7'}>
-        <View alignItems="center" marginBottom="$4">
+        backgroundColor={t.colors.bg}>
+        <View alignItems="center" marginBottom="$3">
           <Stack.Screen options={{ title: 'Home', headerShown: false }} />
-          <Image source={require('../assets/logo.png')} height={48} width={140} />
+          <Image source={require('../assets/logo.png')} height={48} width={140} resizeMode="contain" />
         </View>
-        <Text textAlign="center">popular - vernáculo - científico</Text>
-        <Text textAlign="center" marginBottom={40}>
-          Registre e pesquise nomes de Pássaros
+        <Text textAlign="center" color={t.colors.textMuted} marginBottom={20}>
+          popular - vernáculo - científico
         </Text>
         <View
           display="flex"
@@ -56,30 +56,39 @@ export default function Home() {
           position="relative"
           zIndex={1}>
           <View
-            borderRadius={'$12'}
+            borderRadius="$12"
             overflow="hidden"
             maxWidth={Platform.OS === 'web' ? 600 : '100%'}
             width="100%"
             position="relative">
             <Input
-              borderColor={'$borderColor'}
+              borderColor="$borderColor"
               onChangeText={setSearchTerm}
               value={searchTerm}
-              backgroundColor={'#ECE6F0'}
+              backgroundColor={t.colors.inputBg}
               placeholder="Busque o nome do pássaro"
-              placeholderTextColor={'#49454F'}
+              placeholderTextColor={t.colors.textSecondary}
               height={48}
               fontSize={16}
               paddingRight={40}
             />
-            <Image
-              source={require('../assets/icons/search.png')}
-              height={17}
-              width={17}
-              position="absolute"
-              right={15}
-              top={15}
-            />
+            {searchTerm.length > 0 ? (
+              <Pressable
+                onPress={() => setSearchTerm('')}
+                style={{ position: 'absolute', right: 12, top: 12, padding: 4 }}
+                accessibilityLabel="Limpar busca">
+                <Text fontSize={18} color={t.colors.textSecondary}>✕</Text>
+              </Pressable>
+            ) : (
+              <Image
+                source={require('../assets/icons/search.png')}
+                height={17}
+                width={17}
+                position="absolute"
+                right={15}
+                top={15}
+              />
+            )}
           </View>
         </View>
 
@@ -88,25 +97,40 @@ export default function Home() {
             width="100%"
             overflow="hidden"
             alignSelf="center"
-            height={400}
+            flex={1}
             position="relative"
             zIndex={0}
             maxWidth={Platform.OS === 'web' ? 600 : '100%'}>
             {isLoading ? (
-              <View marginTop={'$4'} alignItems="center">
+              <View marginTop="$4" alignItems="center">
                 <LoadingSpinner />
+              </View>
+            ) : searchQuery.isError ? (
+              <View marginTop="$4" alignItems="center" gap="$2">
+                <Text color={t.colors.textMuted}>Erro na busca. Tente novamente.</Text>
+                <Button
+                  size="$3"
+                  backgroundColor="transparent"
+                  borderColor={t.colors.primary}
+                  borderWidth={1}
+                  color={t.colors.primary}
+                  borderRadius={t.radii.pill}
+                  onPress={() => setSearchTerm((prev) => prev + ' ')}>
+                  Tentar novamente
+                </Button>
               </View>
             ) : results.length > 0 ? (
               <FlashList
-                estimatedItemSize={20}
+                estimatedItemSize={70}
                 showsVerticalScrollIndicator={true}
                 contentContainerStyle={{
                   paddingRight: 10,
+                  paddingTop: 8,
                 }}
-                renderItem={({ item, index }) => {
+                renderItem={({ item }) => {
                   if (typeof item === 'string') {
                     return (
-                      <H4 marginTop="$6" fontWeight={'bold'}>
+                      <H4 marginTop="$4" marginBottom="$2" fontWeight="bold" color={t.colors.text}>
                         {item}
                       </H4>
                     );
@@ -122,21 +146,26 @@ export default function Home() {
                       }
                       width="100%"
                       alignSelf="stretch"
-                      paddingHorizontal="$2"
-                      paddingVertical="$2"
-                      justifyContent="space-around"
+                      paddingHorizontal={t.spacing.cardPad}
+                      paddingVertical={12}
+                      justifyContent="center"
                       alignItems="flex-start"
-                      borderRadius={0}
-                      height={60}
-                      backgroundColor={index % 2 === 0 ? '#FFFBF7' : '#ECE6F0'}
+                      borderRadius={t.radii.card}
+                      backgroundColor={t.colors.surface}
                       flexDirection="column"
-                      marginBottom="$2"
+                      marginBottom={8}
                       display="flex"
-                      gap="$0">
-                      <Text padding={0} margin={0} fontWeight={'bold'}>
+                      gap={2}
+                      elevation={1}
+                      shadowColor="rgba(0,0,0,0.08)"
+                      shadowOffset={{ width: 0, height: 1 }}
+                      shadowRadius={4}
+                      borderWidth={1}
+                      borderColor={t.colors.borderSoft}>
+                      <Text padding={0} margin={0} fontWeight="bold" color={t.colors.text}>
                         {item.stringFound}
                       </Text>
-                      <Text padding={0} margin={0} fontStyle="italic">
+                      <Text padding={0} margin={0} fontStyle="italic" color={t.colors.textMuted}>
                         {item.scientificName}
                       </Text>
                     </Button>
@@ -145,7 +174,14 @@ export default function Home() {
                 data={results}
               />
             ) : (
-              <Text marginTop={'$4'}>Nenhum resultado encontrado</Text>
+              <View marginTop="$4" alignItems="center" gap="$2">
+                <Text color={t.colors.textMuted} textAlign="center">
+                  Nenhum resultado para "{searchTerm.trim()}"
+                </Text>
+                <Text color={t.colors.textMuted} fontSize={14} textAlign="center">
+                  Tente o nome científico ou popular da espécie.
+                </Text>
+              </View>
             )}
           </View>
         )}
