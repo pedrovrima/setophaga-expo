@@ -2,6 +2,7 @@ import { View, XStack, Button, Image, Popover, YStack } from 'tamagui';
 import { Link, router } from 'expo-router';
 import { Platform, useWindowDimensions } from 'react-native';
 import { Icon } from 'react-native-elements';
+import { tokens as t } from '~/src/theme/tokens';
 
 export default function TopMenu() {
   const { width } = useWindowDimensions();
@@ -11,7 +12,7 @@ export default function TopMenu() {
 
   return (
     <XStack
-      backgroundColor="#DED2F9"
+      backgroundColor={t.colors.secondaryLight}
       width="100%"
       height={48}
       justifyContent="center"
@@ -57,7 +58,7 @@ export default function TopMenu() {
         <Popover placement="bottom-end">
           <Popover.Trigger asChild>
             <Button backgroundColor="transparent" padding="$2">
-              <Icon name="menu" type="material" color="#6750A4" size={24} />
+              <Icon name="menu" type="material" color={t.colors.primary} size={24} />
             </Button>
           </Popover.Trigger>
 
@@ -70,7 +71,7 @@ export default function TopMenu() {
                   <Icon
                     name="person-outline"
                     type="material"
-                    color="#000"
+                    color={t.colors.text}
                     size={20}
                     style={{ marginRight: 8 }}
                   />
@@ -87,7 +88,7 @@ export default function TopMenu() {
                   <Icon
                     name="logout"
                     type="material"
-                    color="#000"
+                    color={t.colors.text}
                     size={20}
                     style={{ marginRight: 8 }}
                   />

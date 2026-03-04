@@ -1,22 +1,22 @@
-import { Session } from '@supabase/supabase-js';
 import { useLocalSearchParams, Stack, router } from 'expo-router';
-import { useEffect, useState } from 'react';
-import { useForm, Controller } from 'react-hook-form';
+import { useForm, Controller, useWatch } from 'react-hook-form';
 import { Alert } from 'react-native';
-import { View, Input, XStack, YStack, Text, Button, TextArea } from 'tamagui';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import { View, YStack, Text, Button, XStack } from 'tamagui';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 import { getNetworkStateAsync } from 'expo-network';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 import Select from '~/components/Select';
+import SearchableSelect from '~/components/SearchableSelect';
 import Authentication from '~/components/screens/Authentication';
+import FloatingLabelInput from '~/components/FloatingLabelInput';
+import ScreenHeader from '~/components/ScreenHeader';
 import useCreateName from '~/hooks/useCreateName';
 import useSpeciesDetail from '~/hooks/useSpeciesDetail';
+import useSessionAuth from '~/hooks/useSessionAuth';
 import { municipios } from '~/municipios.json';
-import { supabase } from '~/app/db';
-import { ScreenHeight } from 'react-native-elements/dist/helpers';
-import { Icon } from 'react-native-elements';
 import LoadingDialog from '~/components/LoadingDialog';
+import { tokens as t } from '~/src/theme/tokens';
 
 const stateCities = municipios.reduce<Record<string, string[]>>((red, mun) => {
   if (red[mun['UF-sigla']]) {
@@ -27,51 +27,74 @@ const stateCities = municipios.reduce<Record<string, string[]>>((red, mun) => {
   return red;
 }, {});
 
+const states = Array.from(new Set(municipios.map((mun) => mun['UF-sigla']))).sort();
+
+function StateCitySelector({
+  control,
+  setValue,
+  errors,
+}: {
+  control: any;
+  setValue: any;
+  errors: any;
+}) {
+  const selectedState = useWatch({ control, name: 'state' });
+
+  return (
+    <>
+      <YStack>
+        <Controller
+          control={control}
+          defaultValue=""
+          render={({ field }) => (
+            <Select
+              {...field}
+              label="Estado"
+              items={states}
+              disabled={false}
+              placeholder="Selecione o estado"
+              changeCallback={() => setValue('city', '')}
+              backgroundColor="transparent"
+              placeholderTextColor={t.colors.placeholder}
+            />
+          )}
+          name="state"
+          rules={{ required: 'Obrigatório' }}
+        />
+        {errors.state && (
+          <Text marginLeft={12} fontSize={12} color={t.colors.error}>
+            {errors.state.message as string}
+          </Text>
+        )}
+      </YStack>
+      <YStack>
+        <Controller
+          control={control}
+          defaultValue=""
+          render={({ field }) => (
+            <SearchableSelect
+              value={field.value}
+              onChange={field.onChange}
+              label="Cidade"
+              disabled={!selectedState}
+              placeholder="Digite para buscar a cidade"
+              items={stateCities[selectedState] || []}
+              error={errors.city?.message as string}
+            />
+          )}
+          name="city"
+          rules={{ required: 'Obrigatório' }}
+        />
+      </YStack>
+    </>
+  );
+}
+
 export default function Details() {
   const { id } = useLocalSearchParams<{ id?: string }>();
-  const [session, setSession] = useState<Session | null>(null);
-  const [loading, setLoading] = useState(false);
-
-  useEffect(() => {
-    setLoading(true);
-    AsyncStorage.getItem('session')
-      .then((data) => {
-        if (data) {
-          setSession(JSON.parse(data || ''));
-          setLoading(false);
-        }
-      })
-      .catch((error: unknown) => {
-        console.log(error);
-      });
-
-    supabase.auth
-      .getSession()
-      .then(({ data: { session } }: { data: { session: Session | null } }) => {
-        setSession(session);
-        AsyncStorage.setItem('session', JSON.stringify(session));
-        setLoading(false);
-      })
-      .catch((error: unknown) => {
-        console.log(error);
-        setLoading(false);
-      });
-
-    supabase.auth.onAuthStateChange((_event: string, session: Session | null) => {
-      setSession(session);
-      setLoading(false);
-    });
-  }, []);
-
+  const { session, loading } = useSessionAuth();
   const { data: thisSpp } = useSpeciesDetail(id);
   const createNameMutations = useCreateName();
-  const states = municipios.reduce((red: string[], mun) => {
-    if (red.find((m) => m === mun['UF-sigla'])) {
-      return red;
-    }
-    const uf = mun['UF-sigla'];
-    return [...red, uf];
-  }, []);
 
   const {
     control,
@@ -79,8 +102,8 @@ export default function Details() {
     formState: { errors },
     setValue,
     getValues,
-    watch,
   } = useForm();
+
   const onSubmit = async (data: any) => {
     if (!thisSpp) {
       Alert.alert('Erro', 'Espécie não encontrada');
@@ -121,262 +144,142 @@ export default function Details() {
     createNameMutations.mutate(_data);
   };
 
-  useEffect(() => {
-    if (createNameMutations.isError) {
-      Alert.alert('Erro', 'Erro ao cadastrar sinônimo, tente novamente mais tarde');
-    }
-  }, [createNameMutations.isError]);
+  // Handle mutation results
+  if (createNameMutations.isError) {
+    Alert.alert('Erro', 'Erro ao cadastrar sinônimo, tente novamente mais tarde');
+  }
 
-  useEffect(() => {
+  if (createNameMutations.isSuccess) {
     if (createNameMutations.data?.status === 409) {
       Alert.alert('Erro', 'Nome já cadastrado para este municipio');
     } else {
-      createNameMutations.isSuccess && router.replace(`/spp/${id}?querySuccess=true`);
+      router.replace(`/spp/${id}?querySuccess=true`);
     }
-  }, [createNameMutations.isSuccess]);
+  }
 
   return (
-    <View backgroundColor={'#FFFBF7'} paddingTop={60} paddingHorizontal={12}>
+    <View backgroundColor={t.colors.bg} paddingTop={t.spacing.screenTop} paddingHorizontal={t.spacing.screenX} flex={1}>
       <LoadingDialog loading={createNameMutations.isPending} />
       <Stack.Screen options={{ headerShown: false }} />
 
-      <XStack gap={16}>
-        <Icon
-          style={{ flex: 1 }}
-          name="arrow-back"
-          type="material"
-          color="#6750A4"
-          onPress={() => router.back()}
-        />
-        <Text flex={2} wordWrap="normal" fontSize={22}>
-          Cadastrar sinônimo
-        </Text>
-      </XStack>
+      <ScreenHeader title="Cadastrar sinônimo" />
+
       <KeyboardAwareScrollView>
         {session?.user.id || loading ? (
           <YStack
-            height={ScreenHeight}
             gap="$4"
             paddingVertical="$4"
             maxWidth={700}
             marginHorizontal="$4">
             <LoadingDialog loading={loading} />
+
             <YStack>
-              <Text fontWeight="bold" textTransform="uppercase">
+              <Text fontWeight="bold" textTransform="uppercase" color={t.colors.textSecondary}>
                 Nome Científico
               </Text>
-              <Text fontStyle="italic">{thisSpp?.name_sci || 'Carregando...'}</Text>
+              <Text fontStyle="italic" color={t.colors.text}>
+                {thisSpp?.name_sci || 'Carregando...'}
+              </Text>
             </YStack>
+
             <YStack>
-              <Text fontWeight="bold" textTransform="uppercase">
+              <Text fontWeight="bold" textTransform="uppercase" color={t.colors.textSecondary}>
                 CBRO
               </Text>
-              <Text>{thisSpp?.name_ptbr || 'Carregando...'}</Text>
+              <Text color={t.colors.text}>{thisSpp?.name_ptbr || 'Carregando...'}</Text>
             </YStack>
-            {/* Form Girdileri */}
-            <YStack>
-              <Controller
-                control={control}
-                defaultValue={''}
-                render={({ field }) => (
-                  <View position="relative">
-                    <Input
-                      borderColor={'#79747E'}
-                      {...field}
-                      placeholder="Escreva o sinônimo que deseja cadastrar"
-                      onChangeText={field.onChange}
-                      paddingVertical={12}
-                      paddingLeft={16}
-                      backgroundColor={'transparent'}
-                      placeholderTextColor={'#1D1B20'}
-                    />
-                    <Text
-                      position="absolute"
-                      top={-8}
-                      left={12}
-                      fontSize={12}
-                      color={'#49454F'}
-                      backgroundColor={'#FEF7FF'}>
-                      Termo
-                    </Text>
-                  </View>
-                )}
-                name="name"
-                rules={{ required: 'Obrigatório' }}
-              />
-              {errors.name && <ErrorText>{errors?.name?.message as string}</ErrorText>}
-            </YStack>
-            <YStack>
-              <Controller
-                control={control}
-                defaultValue={''}
-                render={({ field }) => (
-                  <View position="relative">
-                    <Input
-                      borderColor={'#79747E'}
-                      {...field}
-                      placeholder="Qual a origem do nome?"
-                      onChangeText={field.onChange}
-                      paddingVertical={12}
-                      paddingLeft={16}
-                      backgroundColor={'transparent'}
-                      placeholderTextColor={'#1D1B20'}
-                    />
-                    <Text
-                      position="absolute"
-                      top={-8}
-                      left={12}
-                      fontSize={12}
-                      color={'#49454F'}
-                      backgroundColor={'#FEF7FF'}>
-                      Quem falou?
-                    </Text>
-                  </View>
-                )}
-                name="informer"
-                rules={{ required: 'Obrigatório' }}
-              />
-              {errors.informer && <ErrorText>{errors?.informer?.message as string}</ErrorText>}
-            </YStack>
-            <YStack>
-              <Controller
-                control={control}
-                defaultValue={''}
-                render={({ field }) => (
-                  <Select
-                    {...field}
-                    label={'Estado'}
-                    items={states.sort()}
-                    disabled={false}
-                    placeholder="Selecione o estado"
-                    changeCallback={() => setValue('city', '')}
-                    backgroundColor={'transparent'}
-                    placeholderTextColor={'#1D1B20'}
-                  />
-                )}
-                name="state"
-                rules={{ required: 'Obrigatório' }}
-              />
-              {errors.state && <ErrorText>{errors?.state?.message as string}</ErrorText>}
-            </YStack>
-            <YStack>
-              <Controller
-                control={control}
-                defaultValue={''}
-                render={({ field }) => (
-                  <Select
-                    {...field}
-                    label={'Cidade'}
-                    disabled={!watch('state')}
-                    placeholder="Selecione a cidade"
-                    items={stateCities[watch('state')] || []}
-                    changeCallback={() => {}}
-                    backgroundColor={'transparent'}
-                    placeholderTextColor={'#1D1B20'}
-                  />
-                )}
-                name="city"
-                rules={{ required: 'Obrigatório' }}
-              />
-              {errors.city && <ErrorText>{errors?.city?.message as string}</ErrorText>}
-            </YStack>
-            <YStack>
-              <YStack>
-                <Controller
-                  control={control}
-                  defaultValue={''}
-                  render={({ field }) => (
-                    <View position="relative">
-                      <Input
-                        borderColor={'#79747E'}
-                        {...field}
-                        placeholder="Onde você ouviu o nome?"
-                        onChangeText={field.onChange}
-                        paddingVertical={12}
-                        paddingLeft={16}
-                        backgroundColor={'transparent'}
-                        placeholderTextColor={'#1D1B20'}
-                      />
-                      <Text
-                        position="absolute"
-                        top={-8}
-                        left={12}
-                        fontSize={12}
-                        color={'#49454F'}
-                        backgroundColor={'#FEF7FF'}>
-                        Localidade
-                      </Text>
-                    </View>
-                  )}
-                  name="location"
-                  rules={{ required: 'Obrigatório' }}
+
+            {/* Form Fields */}
+            <Controller
+              control={control}
+              defaultValue=""
+              render={({ field }) => (
+                <FloatingLabelInput
+                  label="Termo"
+                  placeholder="Escreva o sinônimo que deseja cadastrar"
+                  value={field.value}
+                  onChangeText={field.onChange}
+                  error={errors.name?.message as string}
                 />
-                <Text marginLeft={12} fontSize={12} color={'#49454F'}>
-                  Exemplo: Fazenda São João
-                </Text>
-              </YStack>
-              {errors.location && <ErrorText>{errors?.location?.message as string}</ErrorText>}
-            </YStack>
-            <YStack>
-              <YStack>
-                <Controller
-                  control={control}
-                  defaultValue={''}
-                  render={({ field }) => (
-                    <View position="relative">
-                      <TextArea
-                        borderColor={'#79747E'}
-                        {...field}
-                        placeholder="Algo mais que deseja adicionar? Motivo do nome, algum dado curioso ou importante?"
-                        onChangeText={field.onChange}
-                        paddingVertical={12}
-                        paddingLeft={16}
-                        backgroundColor={'transparent'}
-                        placeholderTextColor={'#1D1B20'}
-                      />
-                      <Text
-                        position="absolute"
-                        top={-8}
-                        left={12}
-                        fontSize={12}
-                        color={'#49454F'}
-                        backgroundColor={'#FEF7FF'}>
-                        Comentário
-                      </Text>
-                    </View>
-                  )}
-                  name="observation"
-                />
-              </YStack>
-              {errors.observation && (
-                <ErrorText>{errors?.observation?.message as string}</ErrorText>
               )}
-            </YStack>
-            {/* Submit Butonu */}
+              name="name"
+              rules={{ required: 'Obrigatório' }}
+            />
+
+            <Controller
+              control={control}
+              defaultValue=""
+              render={({ field }) => (
+                <FloatingLabelInput
+                  label="Quem falou?"
+                  placeholder="Qual a origem do nome?"
+                  value={field.value}
+                  onChangeText={field.onChange}
+                  error={errors.informer?.message as string}
+                />
+              )}
+              name="informer"
+              rules={{ required: 'Obrigatório' }}
+            />
+
+            <StateCitySelector control={control} setValue={setValue} errors={errors} />
+
+            <Controller
+              control={control}
+              defaultValue=""
+              render={({ field }) => (
+                <FloatingLabelInput
+                  label="Localidade"
+                  placeholder="Onde você ouviu o nome?"
+                  value={field.value}
+                  onChangeText={field.onChange}
+                  error={errors.location?.message as string}
+                  hint="Exemplo: Fazenda São João"
+                />
+              )}
+              name="location"
+              rules={{ required: 'Obrigatório' }}
+            />
+
+            <Controller
+              control={control}
+              defaultValue=""
+              render={({ field }) => (
+                <FloatingLabelInput
+                  label="Comentário"
+                  placeholder="Algo mais que deseja adicionar? Motivo do nome, algum dado curioso ou importante?"
+                  value={field.value}
+                  onChangeText={field.onChange}
+                  multiline
+                />
+              )}
+              name="observation"
+            />
+
+            {/* Submit Buttons */}
             <XStack gap={8}>
               <Button
-                borderRadius="$12"
-                color={'#FFF'}
+                borderRadius={t.radii.button}
+                color={t.colors.textOnPrimary}
                 paddingHorizontal={24}
                 paddingVertical={10}
                 fontSize={14}
-                fontWeight={'bold'}
-                backgroundColor="#6750A4"
+                fontWeight="bold"
+                backgroundColor={t.colors.primary}
                 onPress={handleSubmit(onSubmit)}>
                 Enviar
               </Button>
               <Button
-                borderRadius="$12"
-                color={'#6750A4'}
+                borderRadius={t.radii.button}
+                color={t.colors.primary}
                 paddingHorizontal={24}
                 paddingVertical={10}
                 fontSize={14}
-                fontWeight={'bold'}
+                fontWeight="bold"
                 backgroundColor="transparent"
-                borderColor={'#6750A4'}
-                onPress={() => {
-                  router.back();
-                }}>
+                borderColor={t.colors.primary}
+                borderWidth={1}
+                onPress={() => router.back()}>
                 Cancelar
               </Button>
             </XStack>
@@ -388,7 +291,3 @@ export default function Details() {
     </View>
   );
 }
-
-const ErrorText = ({ children }: { children: React.ReactNode }) => {
-  return <Text color={'red'}>{children}</Text>;
-};

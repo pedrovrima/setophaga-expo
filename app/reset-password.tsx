@@ -1,5 +1,6 @@
 import { YStack, Image } from 'tamagui';
 import { Dimensions } from 'react-native';
+import { tokens as t } from '~/src/theme/tokens';
 import { useRouter } from 'expo-router';
 import ResetPassword from '~/components/ResetPassword';
 
@@ -29,7 +30,7 @@ export default function ResetPasswordPage() {
       marginTop={60}
       alignItems="center"
       justifyContent="flex-start"
-      backgroundColor={'#FFFBF7'}
+      backgroundColor={t.colors.bg}
       gap={'$8'}>
       <Image source={require('../assets/logo.png')} height={48 * 2} width={140 * 2} />
       <ResetPassword

@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { Alert, StyleSheet, View, AppState, Dimensions } from 'react-native';
-import { Button, Input, Image, Label } from 'tamagui';
+import { AppState, Dimensions } from 'react-native';
+import { Button, Image } from 'tamagui';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { usePathname, useLocalSearchParams } from 'expo-router';
 
@@ -9,11 +9,8 @@ import { YStack } from 'tamagui';
 import SignIn from '../SignIn';
 import SignUp from '../SignUp';
 import ForgotPassword from '../ForgotPassword';
+import { tokens as t } from '~/src/theme/tokens';
 
-// Tells Supabase Auth to continuously refresh the session automatically if
-// the app is in the foreground. When this is added, you will continue to receive
-// `onAuthStateChange` events with the `TOKEN_REFRESHED` or `SIGNED_OUT` event
-// if the user's session is terminated. This should only be registered once.
 AppState.addEventListener('change', (state) => {
   if (state === 'active') {
     supabase.auth.startAutoRefresh();
@@ -22,11 +19,25 @@ AppState.addEventListener('change', (state) => {
   }
 });
 
+function AuthLayout({ children }: { children: React.ReactNode }) {
+  const ScreenHeight = Dimensions.get('window').height;
+  return (
+    <YStack
+      height={ScreenHeight}
+      marginTop={t.spacing.screenTop}
+      alignItems="center"
+      justifyContent="flex-start"
+      backgroundColor={t.colors.bg}
+      gap="$8">
+      <Image source={require('../../assets/logo.png')} height={48 * 2} width={140 * 2} />
+      {children}
+    </YStack>
+  );
+}
+
 export default function Authentication() {
-  let ScreenHeight = Dimensions.get('window').height;
   const pathname = usePathname();
   const searchParams = useLocalSearchParams();
-
   const [type, setType] = useState('');
 
   useEffect(() => {
@@ -39,103 +50,58 @@ export default function Authentication() {
 
   if (type === '') {
     return (
-      <YStack
-        height={ScreenHeight}
-        marginTop={60}
-        alignItems="center"
-        justifyContent="flex-start"
-        backgroundColor={'#FFFBF7'}
-        gap={'$8'}>
-        <Image source={require('../../assets/logo.png')} height={48 * 2} width={140 * 2} />
-        <YStack gap={'$4'}>
+      <AuthLayout>
+        <YStack gap="$4">
           <Button
-            borderRadius="$12"
-            color={'#FFF'}
+            borderRadius={t.radii.button}
+            color={t.colors.textOnPrimary}
             paddingHorizontal={24}
             paddingVertical={10}
             fontSize={14}
-            fontWeight={'bold'}
-            width={'$20'}
-            backgroundColor="#6750A4"
+            fontWeight="bold"
+            width="$20"
+            backgroundColor={t.colors.primary}
             onPress={() => setType('signin')}>
-            {' '}
-            Entrar{' '}
+            Entrar
           </Button>
           <Button
-            borderRadius="$12"
-            color={'#FFF'}
+            borderRadius={t.radii.button}
+            color={t.colors.textOnPrimary}
             paddingHorizontal={24}
             paddingVertical={10}
             fontSize={14}
-            fontWeight={'bold'}
-            width={'$20'}
-            backgroundColor="#6750A4"
+            fontWeight="bold"
+            width="$20"
+            backgroundColor={t.colors.primary}
             onPress={() => setType('signup')}>
-            {' '}
-            Cadastrar{' '}
+            Cadastrar
           </Button>
         </YStack>
-      </YStack>
+      </AuthLayout>
     );
   }
 
   if (type === 'signin') {
     return (
-      <YStack
-        height={ScreenHeight}
-        marginTop={60}
-        alignItems="center"
-        justifyContent="flex-start"
-        backgroundColor={'#FFFBF7'}
-        gap={'$8'}>
-        <Image source={require('../../assets/logo.png')} height={48 * 2} width={140 * 2} />
+      <AuthLayout>
         <SignIn setType={setType} />
-      </YStack>
+      </AuthLayout>
     );
   }
 
   if (type === 'signup') {
     return (
-      <YStack
-        height={ScreenHeight}
-        marginTop={60}
-        alignItems="center"
-        justifyContent="flex-start"
-        backgroundColor={'#FFFBF7'}
-        gap={'$8'}>
-        <Image source={require('../../assets/logo.png')} height={48 * 2} width={140 * 2} />
+      <AuthLayout>
         <SignUp setType={setType} />
-      </YStack>
+      </AuthLayout>
     );
   }
 
   if (type === 'forgot-password') {
     return (
-      <YStack
-        height={ScreenHeight}
-        marginTop={60}
-        alignItems="center"
-        justifyContent="flex-start"
-        backgroundColor={'#FFFBF7'}
-        gap={'$8'}>
-        <Image source={require('../../assets/logo.png')} height={48 * 2} width={140 * 2} />
+      <AuthLayout>
         <ForgotPassword setType={setType} />
-      </YStack>
+      </AuthLayout>
     );
   }
 }
-
-const styles = StyleSheet.create({
-  container: {
-    marginTop: 40,
-    padding: 12,
-  },
-  verticallySpaced: {
-    paddingTop: 4,
-    paddingBottom: 4,
-    alignSelf: 'stretch',
-  },
-  mt20: {
-    marginTop: 20,
-  },
-});

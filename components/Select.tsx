@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react';
 import { Icon } from 'react-native-elements';
 import type { FontSizeTokens, SelectProps } from 'tamagui';
 import { Adapt, Label, Select, Sheet, XStack, YStack, View, Text } from 'tamagui';
+import { tokens as t } from '~/src/theme/tokens';
 
 const ChevronDown = () => (
   <Icon type="material-community" name="chevron-down" size={20} color="black" />
@@ -36,7 +37,7 @@ export default function SelectComp({
       {...props}>
       <View position="relative">
         <Select.Trigger
-          borderColor={'#79747E'}
+          borderColor={t.colors.inputBorder}
           backgroundColor={backgroundColor}
           disabled={disabled}
           iconAfter={ChevronDown}>
@@ -47,8 +48,8 @@ export default function SelectComp({
           top={-8}
           left={12}
           fontSize={12}
-          color={'#49454F'}
-          backgroundColor={'#FEF7FF'}>
+          color={t.colors.textSecondary}
+          backgroundColor={t.colors.surfaceTint}>
           {label}
         </Text>
       </View>

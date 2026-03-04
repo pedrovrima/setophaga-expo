@@ -3,7 +3,6 @@ import { and, asc, ilike, inArray, isNotNull, or, sql } from 'drizzle-orm';
 import { db } from '~/db';
 import { birds as birdsTable, synonyms, vernacularNames } from '~/db/schema';
 import {
-  languageDictionary,
   type SearchCriteria,
   type SearchResponse,
   type SearchResultItem,
@@ -72,6 +71,14 @@ const normalizeForSearch = (value: string) =>
     .replace(/[-]/g, ' ')
     .replace(/[^a-z0-9]/gi, '')
     .toLowerCase();
+
+const getTextMatchType = (
+  value: string,
+  normalizedQuery: string
+): SearchResultItem['matchType'] => {
+  const normalizedValue = normalizeForSearch(value);
+  return normalizedValue === normalizedQuery ? 'exact' : 'partial';
+};
 
 const parseLimit = (value: string | null) => {
   const numeric = Number(value);
@@ -240,9 +247,12 @@ const getCriterionMatch = (
     if (!synonym) return undefined;
 
     return {
-      id: candidate.id,
+      id: String(candidate.id),
+      primaryName: synonym.name,
       scientificName: candidate.scientificName,
-      stringFound: synonym.name,
+      language: 'pt',
+      isCBRO: false,
+      matchType: getTextMatchType(synonym.name, normalizedQuery),
     };
   }
 
@@ -255,10 +265,23 @@ const getCriterionMatch = (
 
     if (!ptbrMatch && !scientificMatch) return undefined;
 
+    if (ptbrMatch) {
+      return {
+        id: String(candidate.id),
+        primaryName: ptbr,
+        scientificName: candidate.scientificName,
+        language: 'pt',
+        isCBRO: true,
+        matchType: getTextMatchType(ptbr, normalizedQuery),
+      };
+    }
+
     return {
-      id: candidate.id,
+      id: String(candidate.id),
+      primaryName: scientific,
       scientificName: candidate.scientificName,
-      stringFound: ptbrMatch ? ptbr : scientific,
+      isCBRO: true,
+      matchType: 'scientific',
     };
   }
 
@@ -270,9 +293,12 @@ const getCriterionMatch = (
   }
 
   return {
-    id: candidate.id,
+    id: String(candidate.id),
+    primaryName: localizedName,
     scientificName: candidate.scientificName,
-    stringFound: localizedName,
+    language,
+    isCBRO: false,
+    matchType: getTextMatchType(localizedName, normalizedQuery),
   };
 };
 
@@ -285,37 +311,25 @@ const toSearchResponse = (
   const normalizedQuery = normalizeForSearch(query);
 
   const results: SearchResults = [];
-  let total = 0;
+  const seenBirds = new Set<number>();
 
+  outer:
   for (const criterion of criteria) {
-    if (total >= resultLimit) break;
-
-    const seenBirds = new Set<number>();
-    const sectionMatches: SearchResultItem[] = [];
-
     for (const candidate of candidates) {
+      if (results.length >= resultLimit) break outer;
+      if (seenBirds.has(candidate.id)) continue;
+
       const match = getCriterionMatch(candidate, criterion, normalizedQuery);
-      if (!match || seenBirds.has(match.id) || !match.stringFound) continue;
+      if (!match || !match.primaryName) continue;
 
-      seenBirds.add(match.id);
-      sectionMatches.push(match);
-
-      if (total + sectionMatches.length >= resultLimit) break;
-    }
-
-    if (sectionMatches.length === 0) continue;
-
-    results.push(languageDictionary[criterion]);
-    for (const sectionMatch of sectionMatches) {
-      if (total >= resultLimit) break;
-      results.push(sectionMatch);
-      total += 1;
+      seenBirds.add(candidate.id);
+      results.push(match);
     }
   }
 
   return {
     query,
-    total,
+    total: results.length,
     results,
   };
 };

@@ -9,7 +9,7 @@ import * as Linking from 'expo-linking';
 import useSpeciesDetail from '~/hooks/useSpeciesDetail';
 import LoadingSpinner from '~/components/LoadingSpinner';
 import { languageDictionary } from '~/services/searchMetadata';
-import { speciesTokens as t } from '~/src/theme/speciesTokens';
+import { tokens as t } from '~/src/theme/tokens';
 
 export const languageFlags = {
   name_ptbr: '\uD83C\uDDE7\uD83C\uDDF7',
@@ -44,8 +44,8 @@ export default function Species() {
         animation: true,
         hideOnPress: true,
         delay: 0,
-        backgroundColor: '#322F35',
-        textColor: '#FFF',
+        backgroundColor: t.colors.toast,
+        textColor: t.colors.textOnPrimary,
         opacity: 1,
       });
     }
@@ -104,6 +104,7 @@ export default function Species() {
                 type="material"
                 color={t.colors.primary}
                 onPress={() => router.back()}
+                accessibilityLabel="Voltar"
               />
             </View>
             <YStack flex={1} gap={4}>
@@ -185,7 +186,7 @@ export default function Species() {
                 paddingVertical={3}
                 borderRadius={t.radii.pill}>
                 <Text fontSize={12} color={t.colors.primary} fontWeight="600">
-                  Principal
+                  CBRO
                 </Text>
               </View>
             </XStack>
@@ -206,7 +207,7 @@ export default function Species() {
               </YStack>
             ) : (
               <Text fontSize={14} color={t.colors.textMuted} fontStyle="italic" marginTop={4}>
-                Nenhum sinônimo registrado ainda.
+                Nenhum sinônimo registrado ainda. Seja o primeiro a contribuir!
               </Text>
             )}
           </View>
@@ -249,9 +250,12 @@ export default function Species() {
                             {label}
                           </Text>
                         </XStack>
-                        <Text fontSize={14} color={t.colors.textMuted}>
-                          {isExpanded ? '▾' : '▸'}
-                        </Text>
+                        <Icon
+                          name={isExpanded ? 'expand-more' : 'chevron-right'}
+                          type="material"
+                          color={t.colors.textMuted}
+                          size={20}
+                        />
                       </XStack>
                       {isExpanded && (
                         <View paddingVertical={8} paddingLeft={32}>
@@ -279,11 +283,17 @@ export default function Species() {
         paddingVertical={12}
         backgroundColor={t.colors.bg}
         alignItems="center"
-        elevation={8}>
+        borderTopWidth={1}
+        borderTopColor={t.colors.borderSoft}
+        elevation={8}
+        shadowColor="rgba(0,0,0,0.1)"
+        shadowOffset={{ width: 0, height: -2 }}
+        shadowRadius={8}
+        shadowOpacity={1}>
         <Button
           borderRadius={t.radii.pill}
           backgroundColor={t.colors.primary}
-          color="#FFF"
+          color={t.colors.textOnPrimary}
           fontWeight="bold"
           fontSize={16}
           height={56}
