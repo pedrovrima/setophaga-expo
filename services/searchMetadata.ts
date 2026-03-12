@@ -44,6 +44,7 @@ export type SearchResultItem = {
   id: string;
   primaryName: string;
   scientificName: string;
+  ptbrName?: string;
   language?: string;
   isCBRO?: boolean;
   matchType: 'exact' | 'partial' | 'scientific' | 'fuzzy';

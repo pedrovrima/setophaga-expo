@@ -74,6 +74,24 @@ const getMeta = (result: SearchResultItem): string | null => {
   return lang ? `${lang} • nome comum` : 'nome comum';
 };
 
+const getResultDisplay = (result: SearchResultItem) => {
+  if (result.matchType === 'scientific') {
+    return {
+      primaryText: result.scientificName,
+      secondaryText: result.ptbrName,
+      primaryItalic: true,
+      secondaryItalic: false,
+    };
+  }
+
+  return {
+    primaryText: result.primaryName,
+    secondaryText: result.scientificName,
+    primaryItalic: false,
+    secondaryItalic: true,
+  };
+};
+
 const buildRows = (results: SearchResultItem[]): SearchRow[] => {
   const cbro = results.filter((item) => item.isCBRO);
   const others = results.filter((item) => !item.isCBRO);
@@ -267,6 +285,7 @@ export default function Home() {
 
                   const result = item.result;
                   const meta = getMeta(result);
+                  const display = getResultDisplay(result);
 
                   return (
                     <Pressable
@@ -278,14 +297,26 @@ export default function Home() {
                         })
                       }
                       accessibilityRole="button"
-                      accessibilityLabel={`Abrir espécie ${result.primaryName}`}>
+                      accessibilityLabel={`Abrir espécie ${display.primaryText}`}>
                       <View paddingVertical={13} alignItems="flex-start">
-                        <Text fontSize={16} fontWeight="600" color="#111" textAlign="left">
-                          {highlightMatch(result.primaryName, trimmedSearch)}
+                        <Text
+                          fontSize={16}
+                          fontWeight="600"
+                          color="#111"
+                          textAlign="left"
+                          fontStyle={display.primaryItalic ? 'italic' : undefined}>
+                          {highlightMatch(display.primaryText, trimmedSearch)}
                         </Text>
-                        <Text fontSize={13} color="#666" fontStyle="italic" marginTop={2} textAlign="left">
-                          {result.scientificName}
-                        </Text>
+                        {display.secondaryText && (
+                          <Text
+                            fontSize={13}
+                            color="#666"
+                            fontStyle={display.secondaryItalic ? 'italic' : undefined}
+                            marginTop={2}
+                            textAlign="left">
+                            {display.secondaryText}
+                          </Text>
+                        )}
                         {meta && (
                           <Text fontSize={12} color="#999" marginTop={2} textAlign="left">
                             {meta}
