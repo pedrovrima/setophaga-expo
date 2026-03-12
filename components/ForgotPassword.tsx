@@ -20,14 +20,44 @@ export default function ForgotPassword({ setType }: { setType: (type: string) =>
     formState: { errors },
   } = useForm();
   const [loading, setLoading] = useState(false);
-  const [emailSent, setEmailSent] = useState(false);
+  const [sentToEmail, setSentToEmail] = useState('');
 
-  if (emailSent) {
+  if (sentToEmail) {
     return (
-      <YStack gap="$6" width={200} alignItems="center">
-        <Text textAlign="center" color={t.colors.textSecondary}>
-          Um email com instruções para redefinir sua senha foi enviado.
-        </Text>
+      <YStack gap="$6" width={280} alignItems="center">
+        <YStack
+          backgroundColor={t.colors.surfaceTint}
+          borderRadius={t.radii.card}
+          padding="$4"
+          alignItems="center"
+          gap="$3"
+          width="100%">
+          <Text fontSize={32}>✉️</Text>
+          <Text
+            fontSize={16}
+            fontWeight="bold"
+            color={t.colors.text}
+            textAlign="center">
+            Email enviado
+          </Text>
+          <Text textAlign="center" color={t.colors.textSecondary} fontSize={14}>
+            Enviamos as instruções de redefinição de senha para:
+          </Text>
+          <Text
+            fontWeight="bold"
+            color={t.colors.primary}
+            fontSize={14}
+            textAlign="center">
+            {sentToEmail}
+          </Text>
+          <Text
+            textAlign="center"
+            color={t.colors.textMuted}
+            fontSize={13}
+            marginTop="$2">
+            Verifique também a pasta de spam.
+          </Text>
+        </YStack>
         <Button
           borderRadius={t.radii.button}
           color={t.colors.textOnPrimary}
@@ -89,7 +119,7 @@ export default function ForgotPassword({ setType }: { setType: (type: string) =>
             if (error) {
               Alert.alert('Erro', error.message);
             } else {
-              setEmailSent(true);
+              setSentToEmail(data.email);
             }
           })}>
           Enviar email
