@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useForm, Controller } from 'react-hook-form';
-import { Pressable, Alert } from 'react-native';
+import { Pressable } from 'react-native';
 import { Button, Text, YStack } from 'tamagui';
 import { supabase } from '~/app/db';
 import LoadingDialog from './LoadingDialog';
@@ -14,10 +14,24 @@ export default function SignIn({ setType }: { setType: (type: string) => void })
     formState: { errors },
   } = useForm();
   const [loading, setLoading] = useState(false);
+  const [loginError, setLoginError] = useState('');
+
   return (
     <>
       <LoadingDialog loading={loading} />
       <YStack gap="$6" width={200} alignItems="center">
+        {loginError ? (
+          <YStack
+            backgroundColor="#FDECEA"
+            borderRadius={t.radii.input}
+            paddingHorizontal="$3"
+            paddingVertical="$2"
+            width="$20">
+            <Text color={t.colors.error} fontSize={13} textAlign="center">
+              {loginError}
+            </Text>
+          </YStack>
+        ) : null}
         <YStack justifyContent="flex-start">
           <Controller
             control={control}
@@ -74,6 +88,7 @@ export default function SignIn({ setType }: { setType: (type: string) => void })
           backgroundColor={t.colors.primary}
           onPress={handleSubmit(async (data) => {
             const { email, password } = data;
+            setLoginError('');
             setLoading(true);
             const { error } = await supabase.auth.signInWithPassword({
               email,
@@ -82,7 +97,7 @@ export default function SignIn({ setType }: { setType: (type: string) => void })
 
             if (error) {
               setLoading(false);
-              Alert.alert(error.message);
+              setLoginError(translateAuthError(error.message));
               console.error('error', error);
             }
           })}>
@@ -99,4 +114,15 @@ export default function SignIn({ setType }: { setType: (type: string) => void })
       </YStack>
     </>
   );
+}
+
+function translateAuthError(message: string): string {
+  const map: Record<string, string> = {
+    'Invalid login credentials': 'Email ou senha incorretos.',
+    'Email not confirmed': 'Email ainda não confirmado. Verifique sua caixa de entrada.',
+    'Invalid Refresh Token: Refresh Token Not Found':
+      'Sua sessão expirou. Faça login novamente.',
+    'Too many requests': 'Muitas tentativas. Aguarde um momento e tente novamente.',
+  };
+  return map[message] || 'Erro ao fazer login. Tente novamente.';
 }
