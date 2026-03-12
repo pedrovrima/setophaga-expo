@@ -80,6 +80,9 @@ const getTextMatchType = (
   return normalizedValue === normalizedQuery ? 'exact' : 'partial';
 };
 
+const getMatchPosition = (value: string, normalizedQuery: string) =>
+  normalizeForSearch(value).indexOf(normalizedQuery);
+
 const parseLimit = (value: string | null) => {
   const numeric = Number(value);
   if (!Number.isFinite(numeric)) return DEFAULT_LIMIT;
@@ -234,11 +237,17 @@ type CandidateBird = {
   synonyms: Array<{ id: string; name: string; birdId: number }>;
 };
 
+type RankedSearchMatch = {
+  candidateId: number;
+  item: SearchResultItem;
+  matchPosition: number;
+};
+
 const getCriterionMatch = (
   candidate: CandidateBird,
   criterion: SearchCriteria,
   normalizedQuery: string
-): SearchResultItem | undefined => {
+): RankedSearchMatch | undefined => {
   if (criterion === 'synonyms') {
     const synonym = candidate.synonyms.find((item) =>
       normalizeForSearch(item.name).includes(normalizedQuery)
@@ -247,12 +256,16 @@ const getCriterionMatch = (
     if (!synonym) return undefined;
 
     return {
-      id: String(candidate.id),
-      primaryName: synonym.name,
-      scientificName: candidate.scientificName,
-      language: 'pt',
-      isCBRO: false,
-      matchType: getTextMatchType(synonym.name, normalizedQuery),
+      candidateId: candidate.id,
+      matchPosition: getMatchPosition(synonym.name, normalizedQuery),
+      item: {
+        id: String(candidate.id),
+        primaryName: synonym.name,
+        scientificName: candidate.scientificName,
+        language: 'pt',
+        isCBRO: false,
+        matchType: getTextMatchType(synonym.name, normalizedQuery),
+      },
     };
   }
 
@@ -267,21 +280,29 @@ const getCriterionMatch = (
 
     if (ptbrMatch) {
       return {
-        id: String(candidate.id),
-        primaryName: ptbr,
-        scientificName: candidate.scientificName,
-        language: 'pt',
-        isCBRO: true,
-        matchType: getTextMatchType(ptbr, normalizedQuery),
+        candidateId: candidate.id,
+        matchPosition: getMatchPosition(ptbr, normalizedQuery),
+        item: {
+          id: String(candidate.id),
+          primaryName: ptbr,
+          scientificName: candidate.scientificName,
+          language: 'pt',
+          isCBRO: true,
+          matchType: getTextMatchType(ptbr, normalizedQuery),
+        },
       };
     }
 
     return {
-      id: String(candidate.id),
-      primaryName: scientific,
-      scientificName: candidate.scientificName,
-      isCBRO: true,
-      matchType: 'scientific',
+      candidateId: candidate.id,
+      matchPosition: getMatchPosition(scientific, normalizedQuery),
+      item: {
+        id: String(candidate.id),
+        primaryName: scientific,
+        scientificName: candidate.scientificName,
+        isCBRO: true,
+        matchType: 'scientific',
+      },
     };
   }
 
@@ -293,13 +314,50 @@ const getCriterionMatch = (
   }
 
   return {
-    id: String(candidate.id),
-    primaryName: localizedName,
-    scientificName: candidate.scientificName,
-    language,
-    isCBRO: false,
-    matchType: getTextMatchType(localizedName, normalizedQuery),
+    candidateId: candidate.id,
+    matchPosition: getMatchPosition(localizedName, normalizedQuery),
+    item: {
+      id: String(candidate.id),
+      primaryName: localizedName,
+      scientificName: candidate.scientificName,
+      language,
+      isCBRO: false,
+      matchType: getTextMatchType(localizedName, normalizedQuery),
+    },
   };
+};
+
+const compareRankedMatches = (left: RankedSearchMatch, right: RankedSearchMatch) => {
+  if (left.matchPosition !== right.matchPosition) {
+    return left.matchPosition - right.matchPosition;
+  }
+
+  if (left.item.matchType === 'exact' && right.item.matchType !== 'exact') {
+    return -1;
+  }
+
+  if (left.item.matchType !== 'exact' && right.item.matchType === 'exact') {
+    return 1;
+  }
+
+  if (left.item.primaryName.length !== right.item.primaryName.length) {
+    return left.item.primaryName.length - right.item.primaryName.length;
+  }
+
+  const primaryNameComparison = left.item.primaryName.localeCompare(right.item.primaryName, 'pt-BR');
+  if (primaryNameComparison !== 0) {
+    return primaryNameComparison;
+  }
+
+  const scientificNameComparison = left.item.scientificName.localeCompare(
+    right.item.scientificName,
+    'pt-BR'
+  );
+  if (scientificNameComparison !== 0) {
+    return scientificNameComparison;
+  }
+
+  return left.candidateId - right.candidateId;
 };
 
 const toSearchResponse = (
@@ -315,15 +373,18 @@ const toSearchResponse = (
 
   outer:
   for (const criterion of criteria) {
-    for (const candidate of candidates) {
+    const rankedMatches = candidates
+      .filter((candidate) => !seenBirds.has(candidate.id))
+      .map((candidate) => getCriterionMatch(candidate, criterion, normalizedQuery))
+      .filter((match): match is RankedSearchMatch => Boolean(match))
+      .sort(compareRankedMatches);
+
+    for (const match of rankedMatches) {
       if (results.length >= resultLimit) break outer;
-      if (seenBirds.has(candidate.id)) continue;
+      if (!match.item.primaryName || seenBirds.has(match.candidateId)) continue;
 
-      const match = getCriterionMatch(candidate, criterion, normalizedQuery);
-      if (!match || !match.primaryName) continue;
-
-      seenBirds.add(candidate.id);
-      results.push(match);
+      seenBirds.add(match.candidateId);
+      results.push(match.item);
     }
   }
 
