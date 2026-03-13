@@ -1,7 +1,6 @@
-import { View, XStack, Button, Image, Popover, YStack } from 'tamagui';
-import { Link, router } from 'expo-router';
-import { Platform, useWindowDimensions } from 'react-native';
-import { Icon } from 'react-native-elements';
+import { XStack, Button, Image } from 'tamagui';
+import { Link } from 'expo-router';
+import { useWindowDimensions } from 'react-native';
 import { tokens as t } from '~/src/theme/tokens';
 
 export default function TopMenu() {
@@ -54,50 +53,17 @@ export default function TopMenu() {
           </Link>
         </XStack> */}
 
-        {/* Hamburger menu on the right */}
-        <Popover placement="bottom-end">
-          <Popover.Trigger asChild>
-            <Button backgroundColor="transparent" padding="$2">
-              <Icon name="menu" type="material" color={t.colors.primary} size={24} />
-            </Button>
-          </Popover.Trigger>
-
-          <Popover.Content borderWidth={1} borderColor="$borderColor" padding="$2" width={200}>
-            <YStack gap="$2">
-              <Button
-                backgroundColor="transparent"
-                onPress={() => router.push('/profile')}
-                icon={
-                  <Icon
-                    name="person-outline"
-                    type="material"
-                    color={t.colors.text}
-                    size={20}
-                    style={{ marginRight: 8 }}
-                  />
-                }>
-                Profile
-              </Button>
-              <Button
-                backgroundColor="transparent"
-                onPress={() => {
-                  // Add your logout logic here
-                  console.log('Logout clicked');
-                }}
-                icon={
-                  <Icon
-                    name="logout"
-                    type="material"
-                    color={t.colors.text}
-                    size={20}
-                    style={{ marginRight: 8 }}
-                  />
-                }>
-                Logout
-              </Button>
-            </YStack>
-          </Popover.Content>
-        </Popover>
+        <Link href="/profile" asChild>
+          <Button
+            borderRadius={t.radii.pill}
+            backgroundColor={t.colors.primary}
+            color={t.colors.textOnPrimary}
+            fontWeight="700"
+            paddingHorizontal={18}
+            paddingVertical={10}>
+            Entrar/Registrar
+          </Button>
+        </Link>
       </XStack>
     </XStack>
   );
