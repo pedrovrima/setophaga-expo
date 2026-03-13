@@ -248,6 +248,7 @@ const getCriterionMatch = (
   criterion: SearchCriteria,
   normalizedQuery: string
 ): RankedSearchMatch | undefined => {
+  const ptbrName = getVernacularName(candidate.vernacularNames, 'pt-BR', 'CBRO') || undefined;
   if (criterion === 'synonyms') {
     const synonym = candidate.synonyms.find((item) =>
       normalizeForSearch(item.name).includes(normalizedQuery)
@@ -262,6 +263,7 @@ const getCriterionMatch = (
         id: String(candidate.id),
         primaryName: synonym.name,
         scientificName: candidate.scientificName,
+        ptbrName,
         language: 'pt',
         isCBRO: false,
         matchType: getTextMatchType(synonym.name, normalizedQuery),
@@ -270,8 +272,8 @@ const getCriterionMatch = (
   }
 
   if (criterion === 'name_ptbr') {
-    const ptbr = getVernacularName(candidate.vernacularNames, 'pt-BR', 'CBRO');
     const scientific = candidate.scientificName;
+    const ptbr = ptbrName || '';
 
     const ptbrMatch = normalizeForSearch(ptbr).includes(normalizedQuery);
     const scientificMatch = normalizeForSearch(scientific).includes(normalizedQuery);
@@ -286,6 +288,7 @@ const getCriterionMatch = (
           id: String(candidate.id),
           primaryName: ptbr,
           scientificName: candidate.scientificName,
+          ptbrName,
           language: 'pt',
           isCBRO: true,
           matchType: getTextMatchType(ptbr, normalizedQuery),
@@ -300,6 +303,7 @@ const getCriterionMatch = (
         id: String(candidate.id),
         primaryName: scientific,
         scientificName: candidate.scientificName,
+        ptbrName,
         isCBRO: true,
         matchType: 'scientific',
       },
@@ -320,6 +324,7 @@ const getCriterionMatch = (
       id: String(candidate.id),
       primaryName: localizedName,
       scientificName: candidate.scientificName,
+      ptbrName,
       language,
       isCBRO: false,
       matchType: getTextMatchType(localizedName, normalizedQuery),
