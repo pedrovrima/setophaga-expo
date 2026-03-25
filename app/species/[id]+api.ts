@@ -1,7 +1,7 @@
-import { and, eq, isNotNull, isNull } from 'drizzle-orm';
+import { and, eq, isNotNull, isNull, or, ne } from 'drizzle-orm';
 
 import { db } from '~/db';
-import { birds as birdsTable, synonymRecords } from '~/db/schema';
+import { birds as birdsTable, synonymRecords, synonyms } from '~/db/schema';
 import { transformToLegacy } from '~/services/transformBird';
 
 const extractSpeciesId = (request: Request) => {
@@ -28,6 +28,7 @@ export const GET = async (request: Request): Promise<Response> => {
       with: {
         vernacularNames: true,
         synonyms: {
+          where: or(isNull(synonyms.status), ne(synonyms.status, 'rejected')),
           with: {
             records: {
               where: isNull(synonymRecords.deletedAt),
