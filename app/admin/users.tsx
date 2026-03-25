@@ -32,7 +32,7 @@ export default function AdminUsers() {
     queryKey: ['admin-users'],
     enabled: isSuperAdmin,
     queryFn: async () => {
-      const res = await fetch('/admin/users');
+      const res = await fetch('/admin/api/users');
       if (!res.ok) throw new Error('Erro ao buscar usuários');
       return res.json();
     },
@@ -40,7 +40,7 @@ export default function AdminUsers() {
 
   const updateRoleMutation = useMutation({
     mutationFn: async ({ userId, role }: { userId: string; role: Role }) => {
-      const res = await fetch('/admin/users', {
+      const res = await fetch('/admin/api/users', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ userId, role }),

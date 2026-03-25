@@ -10,7 +10,7 @@ export default function useAdminProfile() {
     queryKey: ['admin-profile', userId],
     enabled: !!userId,
     queryFn: async () => {
-      const res = await fetch(`/admin/profile?userId=${userId}`);
+      const res = await fetch(`/admin/api/profile?userId=${userId}`);
       if (!res.ok) throw new Error('Erro ao buscar perfil');
       return res.json();
     },

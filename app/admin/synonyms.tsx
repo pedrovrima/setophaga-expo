@@ -65,7 +65,7 @@ export default function AdminSynonyms() {
     queryKey: ['admin-synonyms'],
     enabled: isAdmin,
     queryFn: async () => {
-      const res = await fetch('/admin/synonyms');
+      const res = await fetch('/admin/api/synonyms');
       if (!res.ok) throw new Error('Erro ao buscar sinônimos');
       return res.json();
     },
@@ -73,7 +73,7 @@ export default function AdminSynonyms() {
 
   const updateStatusMutation = useMutation({
     mutationFn: async ({ synonymId, status }: { synonymId: string; status: SynonymStatus }) => {
-      const res = await fetch('/admin/synonyms', {
+      const res = await fetch('/admin/api/synonyms', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ synonymId, status }),
