@@ -7,6 +7,7 @@ import Authentication from '~/components/screens/Authentication';
 import ScreenHeader from '~/components/ScreenHeader';
 import useCreateName from '~/hooks/useCreateName';
 import useSessionAuth from '~/hooks/useSessionAuth';
+import useAdminProfile from '~/hooks/useAdminProfile';
 import { supabase } from '~/app/db';
 import { useQuery } from '@tanstack/react-query';
 import { getSpeciesById } from '~/services/api';
@@ -65,6 +66,7 @@ export default function Profile() {
   });
 
   const { session, loading } = useSessionAuth();
+  const { isAdmin, isSuperAdmin } = useAdminProfile();
   const createNameMutations = useCreateName();
 
   return (
@@ -104,6 +106,31 @@ export default function Profile() {
               Sair
             </Button>
           </View>
+
+          {/* Admin Section */}
+          {isAdmin && (
+            <YStack marginTop="$6" gap="$3">
+              <H3 color={t.colors.text}>Administração</H3>
+              <XStack gap="$3" flexWrap="wrap">
+                {isSuperAdmin && (
+                  <Button
+                    borderRadius={t.radii.pill}
+                    backgroundColor={t.colors.primary}
+                    color={t.colors.textOnPrimary}
+                    onPress={() => router.push('/admin/users')}>
+                    Gerenciar Usuários
+                  </Button>
+                )}
+                <Button
+                  borderRadius={t.radii.pill}
+                  backgroundColor={t.colors.primary}
+                  color={t.colors.textOnPrimary}
+                  onPress={() => router.push('/admin/synonyms')}>
+                  Gerenciar Sinônimos
+                </Button>
+              </XStack>
+            </YStack>
+          )}
 
           {/* Offline Data Section */}
           <YStack marginTop="$8" marginBottom="$8">

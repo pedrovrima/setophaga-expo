@@ -1,4 +1,4 @@
-import { and, asc, ilike, inArray, isNotNull, or, sql } from 'drizzle-orm';
+import { and, asc, ilike, inArray, isNotNull, isNull, ne, or, sql } from 'drizzle-orm';
 
 import { db } from '~/db';
 import { birds as birdsTable, synonyms, vernacularNames } from '~/db/schema';
@@ -136,7 +136,10 @@ const buildCandidatesQueryWithUnaccent = (pattern: string, tier: Tier) => {
       .selectDistinct({ birdId: synonyms.birdId })
       .from(synonyms)
       .where(
-        sql`immutable_unaccent(lower(${synonyms.name})) like immutable_unaccent(lower(${pattern}))`
+        and(
+          sql`immutable_unaccent(lower(${synonyms.name})) like immutable_unaccent(lower(${pattern}))`,
+          or(isNull(synonyms.status), ne(synonyms.status, 'rejected'))
+        )
       );
     conditions.push(inArray(birdsTable.id, synonymsSubquery));
   }
@@ -160,6 +163,7 @@ const buildCandidatesQueryWithUnaccent = (pattern: string, tier: Tier) => {
         },
       },
       synonyms: {
+        where: or(isNull(synonyms.status), ne(synonyms.status, 'rejected')),
         columns: {
           id: true,
           name: true,
@@ -195,7 +199,12 @@ const buildCandidatesQueryFallback = (pattern: string, tier: Tier) => {
     const synonymsSubquery = db
       .selectDistinct({ birdId: synonyms.birdId })
       .from(synonyms)
-      .where(ilike(synonyms.name, pattern));
+      .where(
+        and(
+          ilike(synonyms.name, pattern),
+          or(isNull(synonyms.status), ne(synonyms.status, 'rejected'))
+        )
+      );
     conditions.push(inArray(birdsTable.id, synonymsSubquery));
   }
 
@@ -218,6 +227,7 @@ const buildCandidatesQueryFallback = (pattern: string, tier: Tier) => {
         },
       },
       synonyms: {
+        where: or(isNull(synonyms.status), ne(synonyms.status, 'rejected')),
         columns: {
           id: true,
           name: true,

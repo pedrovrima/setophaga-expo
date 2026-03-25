@@ -19,6 +19,7 @@ export const synonyms = pgTable(
     birdId: integer('bird_id')
       .references(() => birds.id)
       .notNull(),
+    status: varchar('status', { length: 20 }), // null = pending, 'approved', 'rejected'
     createdAt: timestamp('created_at').defaultNow().notNull(),
     updatedAt: timestamp('updated_at').defaultNow().notNull(),
   },
