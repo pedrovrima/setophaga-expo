@@ -55,7 +55,7 @@
         "foregroundImage": "./assets/icon-borda.png",
         "backgroundColor": "#FFFBF7"
       },
-      "package": "br.com.xara"
+      "package": "app.oama.xara.android"
     },
     "extra": {
       "router": {
