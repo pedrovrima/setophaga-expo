@@ -8,6 +8,7 @@ import FloatingLabelInput from './FloatingLabelInput';
 import { tokens as t } from '~/src/theme/tokens';
 
 export default function SignIn({ setType }: { setType: (type: string) => void }) {
+  const auth = supabase.auth;
   const {
     control,
     handleSubmit,
@@ -37,14 +38,18 @@ export default function SignIn({ setType }: { setType: (type: string) => void })
             control={control}
             defaultValue=""
             render={({ field }) => (
-              <FloatingLabelInput
-                label="Email"
-                placeholder="helmutsick@gmail.com"
-                value={field.value}
-                onChangeText={field.onChange}
-                error={errors.email?.message as string}
-                width="$20"
-              />
+            <FloatingLabelInput
+              label="Email"
+              placeholder="seuemail@exemplo.com"
+              value={field.value}
+              onChangeText={field.onChange}
+              error={errors.email?.message as string}
+              width="$20"
+              showLabel={false}
+              autoCapitalize="none"
+              autoCorrect={false}
+              autoComplete="email"
+            />
             )}
             name="email"
             rules={{
@@ -58,15 +63,19 @@ export default function SignIn({ setType }: { setType: (type: string) => void })
             control={control}
             defaultValue=""
             render={({ field }) => (
-              <FloatingLabelInput
-                label="Senha"
-                placeholder="Senha"
-                value={field.value}
-                onChangeText={field.onChange}
-                secureTextEntry
-                error={errors.password?.message as string}
-                width="$20"
-              />
+            <FloatingLabelInput
+              label="Senha"
+              placeholder="Digite sua senha"
+              value={field.value}
+              onChangeText={field.onChange}
+              secureTextEntry
+              error={errors.password?.message as string}
+              width="$20"
+              showLabel={false}
+              autoCapitalize="none"
+              autoCorrect={false}
+              autoComplete="current-password"
+            />
             )}
             name="password"
             rules={{ required: 'Obrigatório' }}
@@ -87,10 +96,15 @@ export default function SignIn({ setType }: { setType: (type: string) => void })
           width="$20"
           backgroundColor={t.colors.primary}
           onPress={handleSubmit(async (data) => {
+            if (!auth) {
+              setLoginError('Login indisponível no momento.');
+              return;
+            }
+
             const { email, password } = data;
             setLoginError('');
             setLoading(true);
-            const { error } = await supabase.auth.signInWithPassword({
+            const { error } = await auth.signInWithPassword({
               email,
               password,
             });

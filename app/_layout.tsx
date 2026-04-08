@@ -1,17 +1,15 @@
 import React, { useEffect, useState } from 'react';
-import { TamaguiProvider } from '@tamagui/core';
 import { QueryClientProvider } from '@tanstack/react-query';
 import { useFonts } from 'expo-font';
-import { RootSiblingParent } from 'react-native-root-siblings';
 import { Keyboard, useWindowDimensions } from 'react-native';
 import { Stack, SplashScreen, router } from 'expo-router';
-import { View, Text, Button } from 'tamagui';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
+import { View, Text, Button, TamaguiProvider } from 'tamagui';
 
 import { queryClient } from '~/queryClient';
 
 import { tamaguiConfig } from '../tamagui.config';
 import { ThemeProvider } from 'react-native-elements';
-import { PortalProvider } from 'tamagui';
 import Menu from '~/components/Menu';
 import TopMenu from '~/components/TopMenu';
 import { tokens as t } from '~/src/theme/tokens';
@@ -106,23 +104,21 @@ function Layout() {
     };
   }, []);
 
-  const showBottomMenu = !isKeyboardVisible && !isLargeScreen;
+  const showBottomMenu = false;
 
   return (
-    <ErrorBoundary>
+    <SafeAreaProvider>
       <ThemeProvider>
         <TamaguiProvider config={tamaguiConfig}>
-          <PortalProvider>
-            <RootSiblingParent>
-              <QueryClientProvider client={queryClient}>
-                <TopMenu />
-                <Stack />
-                <Menu show={showBottomMenu} />
-              </QueryClientProvider>
-            </RootSiblingParent>
-          </PortalProvider>
+          <ErrorBoundary>
+            <QueryClientProvider client={queryClient}>
+              <TopMenu />
+              <Stack />
+              <Menu show={showBottomMenu} />
+            </QueryClientProvider>
+          </ErrorBoundary>
         </TamaguiProvider>
       </ThemeProvider>
-    </ErrorBoundary>
+    </SafeAreaProvider>
   );
 }

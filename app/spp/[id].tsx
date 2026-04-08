@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import { Stack, useLocalSearchParams, router } from 'expo-router';
 import { Icon } from 'react-native-elements';
+import { useWindowDimensions } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Button, Text, XStack, YStack, View, ScrollView, Image } from 'tamagui';
 import Toast from 'react-native-root-toast';
 import { useEffect } from 'react';
@@ -34,6 +36,9 @@ export default function Species() {
   const { id, querySuccess } = useLocalSearchParams<{ id?: string; querySuccess?: string }>();
   const speciesQuery = useSpeciesDetail(id);
   const [expandedLangKey, setExpandedLangKey] = useState<string | null>(null);
+  const { width } = useWindowDimensions();
+  const insets = useSafeAreaInsets();
+  const isLargeScreen = width >= 768;
 
   useEffect(() => {
     if (querySuccess === 'true') {
@@ -53,17 +58,23 @@ export default function Species() {
 
   if (speciesQuery.isLoading) {
     return (
-      <View flex={1} backgroundColor={t.colors.bg} justifyContent="center" alignItems="center">
-        <LoadingSpinner />
-      </View>
+      <>
+        <Stack.Screen options={{ headerShown: false, title: '' }} />
+        <View flex={1} backgroundColor={t.colors.bg} justifyContent="center" alignItems="center">
+          <LoadingSpinner />
+        </View>
+      </>
     );
   }
 
   if (speciesQuery.isError || !speciesQuery.data) {
     return (
-      <View flex={1} backgroundColor={t.colors.bg} justifyContent="center" alignItems="center">
-        <Text color={t.colors.textMuted}>Espécie não encontrada</Text>
-      </View>
+      <>
+        <Stack.Screen options={{ headerShown: false, title: '' }} />
+        <View flex={1} backgroundColor={t.colors.bg} justifyContent="center" alignItems="center">
+          <Text color={t.colors.textMuted}>Espécie não encontrada</Text>
+        </View>
+      </>
     );
   }
 
@@ -90,31 +101,56 @@ export default function Species() {
           alignItems: 'center',
           width: '100%',
           minWidth: '100%',
-          paddingBottom: 120,
+          paddingBottom: isLargeScreen ? 32 : 120 + insets.bottom,
         }}
         backgroundColor={t.colors.bg}
         flex={1}
         width="100%">
-        <YStack maxWidth={600} width="100%" marginBottom={24} gap="$4">
+        <YStack maxWidth={760} width="100%" marginBottom={24} gap="$4">
           {/* Header */}
-          <XStack gap={16} alignItems="flex-start" width="100%">
-            <View paddingTop={4}>
-              <Icon
-                name="arrow-back"
-                type="material"
-                color={t.colors.primary}
-                onPress={() => router.back()}
-                accessibilityLabel="Voltar"
-              />
-            </View>
-            <YStack flex={1} gap={4}>
-              <Text fontSize={28} fontWeight="800" color={t.colors.text}>
-                {thisSpecies.name_ptbr}
-              </Text>
-              <Text fontSize={16} fontStyle="italic" color={t.colors.textMuted}>
-                {thisSpecies.name_sci}
-              </Text>
-            </YStack>
+          <XStack gap={16} alignItems="flex-start" width="100%" justifyContent="space-between">
+            <XStack gap={16} alignItems="flex-start" flex={1}>
+              <View paddingTop={4}>
+                <Icon
+                  name="arrow-back"
+                  type="material"
+                  color={t.colors.primary}
+                  onPress={() => router.back()}
+                  accessibilityLabel="Voltar"
+                />
+              </View>
+              <YStack flex={1} gap={4}>
+                <Text fontSize={28} fontWeight="800" color={t.colors.text}>
+                  {thisSpecies.name_ptbr}
+                </Text>
+                <Text fontSize={16} fontStyle="italic" color={t.colors.textMuted}>
+                  {thisSpecies.name_sci}
+                </Text>
+              </YStack>
+            </XStack>
+            {isLargeScreen && (
+              <View position="sticky" top={88} paddingTop={2}>
+                <Button
+                  borderRadius={t.radii.pill}
+                  backgroundColor={t.colors.primary}
+                  color={t.colors.textOnPrimary}
+                  fontWeight="bold"
+                  fontSize={16}
+                  height={56}
+                  paddingHorizontal={22}
+                  hoverStyle={{ backgroundColor: t.colors.primary, opacity: 1 }}
+                  pressStyle={{ backgroundColor: t.colors.primary, opacity: 1 }}
+                  focusStyle={{ backgroundColor: t.colors.primary }}
+                  onPress={() =>
+                    router.push({
+                      pathname: '/add',
+                      params: { id: String(id || '') },
+                    })
+                  }>
+                  Adicionar sinônimo
+                </Button>
+              </View>
+            )}
           </XStack>
 
           {/* Taxonomy Card */}
@@ -270,44 +306,50 @@ export default function Species() {
               </YStack>
             </View>
           )}
+
         </YStack>
       </ScrollView>
 
-      {/* Sticky Footer CTA */}
-      <YStack
-        position="absolute"
-        bottom={0}
-        left={0}
-        right={0}
-        paddingHorizontal={t.spacing.screenX}
-        paddingVertical={12}
-        backgroundColor={t.colors.bg}
-        alignItems="center"
-        borderTopWidth={1}
-        borderTopColor={t.colors.borderSoft}
-        elevation={8}
-        shadowColor="rgba(0,0,0,0.1)"
-        shadowOffset={{ width: 0, height: -2 }}
-        shadowRadius={8}
-        shadowOpacity={1}>
-        <Button
-          borderRadius={t.radii.pill}
-          backgroundColor={t.colors.primary}
-          color={t.colors.textOnPrimary}
-          fontWeight="bold"
-          fontSize={16}
-          height={56}
-          width="100%"
-          maxWidth={600}
-          onPress={() =>
-            router.push({
-              pathname: '/add',
-              params: { id: String(id || '') },
-            })
-          }>
-          Adicionar sinônimo
-        </Button>
-      </YStack>
+      {!isLargeScreen && (
+        <YStack
+          position="absolute"
+          bottom={0}
+          left={0}
+          right={0}
+          paddingHorizontal={t.spacing.screenX}
+          paddingTop={12}
+          paddingBottom={12 + insets.bottom}
+          backgroundColor={t.colors.bg}
+          alignItems="center"
+          borderTopWidth={1}
+          borderTopColor={t.colors.borderSoft}
+          elevation={8}
+          shadowColor="rgba(0,0,0,0.1)"
+          shadowOffset={{ width: 0, height: -2 }}
+          shadowRadius={8}
+          shadowOpacity={1}>
+          <Button
+            borderRadius={t.radii.pill}
+            backgroundColor={t.colors.primary}
+            color={t.colors.textOnPrimary}
+            fontWeight="bold"
+            fontSize={16}
+            height={56}
+            width="100%"
+            maxWidth={600}
+            hoverStyle={{ backgroundColor: t.colors.primary, opacity: 1 }}
+            pressStyle={{ backgroundColor: t.colors.primary, opacity: 1 }}
+            focusStyle={{ backgroundColor: t.colors.primary }}
+            onPress={() =>
+              router.push({
+                pathname: '/add',
+                params: { id: String(id || '') },
+              })
+            }>
+            Adicionar sinônimo
+          </Button>
+        </YStack>
+      )}
     </>
   );
 }

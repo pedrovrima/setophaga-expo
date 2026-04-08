@@ -1,19 +1,70 @@
-import { XStack, Button, Image } from 'tamagui';
-import { Link } from 'expo-router';
+import { XStack, Button, Image, Text } from 'tamagui';
+import { Link, usePathname } from 'expo-router';
 import { useWindowDimensions } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { tokens as t } from '~/src/theme/tokens';
+import useSessionAuth from '~/hooks/useSessionAuth';
 
 export default function TopMenu() {
   const { width } = useWindowDimensions();
-  const isLargeScreen = width >= 768; // Common tablet/desktop breakpoint
+  const insets = useSafeAreaInsets();
+  const pathname = usePathname();
+  const { session } = useSessionAuth();
+  const isLargeScreen = width >= 768;
+  const isHome = pathname === '/';
 
-  if (!isLargeScreen) return null;
+  if (!isLargeScreen && !isHome) return null;
+
+  const authActions = session?.user ? (
+    <Link href="/profile" asChild>
+      <Button
+        backgroundColor="transparent"
+        padding={0}
+        hoverStyle={{ backgroundColor: 'transparent', opacity: 1 }}
+        pressStyle={{ backgroundColor: 'transparent', opacity: 1 }}
+        focusStyle={{ backgroundColor: 'transparent' }}>
+        <Text color={t.colors.primary} fontWeight="700" fontSize={15}>
+          Perfil
+        </Text>
+      </Button>
+    </Link>
+  ) : (
+    <XStack gap="$2" alignItems="center">
+      <Link href="/profile?mode=signin" asChild>
+        <Button
+          backgroundColor="transparent"
+          paddingHorizontal={8}
+          paddingVertical={6}
+          hoverStyle={{ backgroundColor: 'transparent', opacity: 1 }}
+          pressStyle={{ backgroundColor: 'transparent', opacity: 1 }}
+          focusStyle={{ backgroundColor: 'transparent' }}>
+          <Text color={t.colors.textSecondary} fontWeight="600" fontSize={15} opacity={0.8}>
+            Entrar
+          </Text>
+        </Button>
+      </Link>
+      <Link href="/profile?mode=signup" asChild>
+        <Button
+          backgroundColor="transparent"
+          paddingHorizontal={8}
+          paddingVertical={6}
+          hoverStyle={{ backgroundColor: 'transparent', opacity: 1 }}
+          pressStyle={{ backgroundColor: 'transparent', opacity: 1 }}
+          focusStyle={{ backgroundColor: 'transparent' }}>
+          <Text color={t.colors.primary} fontWeight="800" fontSize={15}>
+            Registrar
+          </Text>
+        </Button>
+      </Link>
+    </XStack>
+  );
 
   return (
     <XStack
       backgroundColor={t.colors.secondaryLight}
       width="100%"
-      height={48}
+      minHeight={isLargeScreen ? 48 : 56 + insets.top}
+      paddingTop={isLargeScreen ? 0 : insets.top}
       justifyContent="center"
       alignItems="center">
       <XStack
@@ -22,9 +73,13 @@ export default function TopMenu() {
         paddingHorizontal={20}
         justifyContent="space-between"
         alignItems="center">
-        {/* Logo on the left */}
         <Link href="/" asChild>
-          <Button backgroundColor="transparent" padding={0}>
+          <Button
+            backgroundColor="transparent"
+            padding={0}
+            hoverStyle={{ backgroundColor: 'transparent', opacity: 1 }}
+            pressStyle={{ backgroundColor: 'transparent', opacity: 1 }}
+            focusStyle={{ backgroundColor: 'transparent' }}>
             <Image
               source={require('../assets/logo.png')}
               height={32}
@@ -33,37 +88,7 @@ export default function TopMenu() {
             />
           </Button>
         </Link>
-
-        {/* Navigation buttons in the middle */}
-        {/* <XStack gap="$4" flex={1} justifyContent="center">
-          <Link href="/" asChild>
-            <Button backgroundColor="transparent" color="white">
-              Home
-            </Button>
-          </Link>
-          <Link href="/about" asChild>
-            <Button backgroundColor="transparent" color="white">
-              About
-            </Button>
-          </Link>
-          <Link href="/contact" asChild>
-            <Button backgroundColor="transparent" color="white">
-              Contact
-            </Button>
-          </Link>
-        </XStack> */}
-
-        <Link href="/profile" asChild>
-          <Button
-            borderRadius={t.radii.pill}
-            backgroundColor={t.colors.primary}
-            color={t.colors.textOnPrimary}
-            fontWeight="700"
-            paddingHorizontal={18}
-            paddingVertical={10}>
-            Entrar/Registrar
-          </Button>
-        </Link>
+        {authActions}
       </XStack>
     </XStack>
   );

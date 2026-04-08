@@ -1,10 +1,11 @@
 import { useLocalSearchParams, Stack, router } from 'expo-router';
 import { useForm, Controller, useWatch } from 'react-hook-form';
-import { Alert } from 'react-native';
+import { Alert, Keyboard } from 'react-native';
 import { View, YStack, Text, Button, XStack } from 'tamagui';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 import { getNetworkStateAsync } from 'expo-network';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useEffect, useState } from 'react';
 
 import Select from '~/components/Select';
 import SearchableSelect from '~/components/SearchableSelect';
@@ -95,6 +96,7 @@ export default function Details() {
   const { session, loading } = useSessionAuth();
   const { data: thisSpp } = useSpeciesDetail(id);
   const createNameMutations = useCreateName();
+  const [isKeyboardVisible, setKeyboardVisible] = useState(false);
 
   const {
     control,
@@ -103,6 +105,20 @@ export default function Details() {
     setValue,
     getValues,
   } = useForm();
+
+  useEffect(() => {
+    const showSubscription = Keyboard.addListener('keyboardDidShow', () => {
+      setKeyboardVisible(true);
+    });
+    const hideSubscription = Keyboard.addListener('keyboardDidHide', () => {
+      setKeyboardVisible(false);
+    });
+
+    return () => {
+      showSubscription.remove();
+      hideSubscription.remove();
+    };
+  }, []);
 
   const onSubmit = async (data: any) => {
     if (!thisSpp) {
@@ -164,7 +180,14 @@ export default function Details() {
 
       <ScreenHeader title="Cadastrar sinônimo" />
 
-      <KeyboardAwareScrollView>
+      <KeyboardAwareScrollView
+        enableOnAndroid
+        enableAutomaticScroll
+        extraHeight={140}
+        extraScrollHeight={140}
+        keyboardOpeningTime={0}
+        keyboardShouldPersistTaps="handled"
+        contentContainerStyle={{ paddingBottom: isKeyboardVisible ? 160 : 24 }}>
         {session?.user.id || loading ? (
           <YStack
             gap="$4"

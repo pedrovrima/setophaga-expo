@@ -14,6 +14,7 @@ const webOrigin = (process.env.EXPO_PUBLIC_WEB_ORIGIN || 'https://xara-roan.verc
 const resetPasswordRedirectTo = `${webOrigin}/reset-password`;
 
 export default function ForgotPassword({ setType }: { setType: (type: string) => void }) {
+  const auth = supabase.auth;
   const {
     control,
     handleSubmit,
@@ -87,11 +88,15 @@ export default function ForgotPassword({ setType }: { setType: (type: string) =>
           render={({ field }) => (
             <FloatingLabelInput
               label="Email"
-              placeholder="helmutsick@gmail.com"
+              placeholder="seuemail@exemplo.com"
               value={field.value}
               onChangeText={field.onChange}
               error={errors.email?.message as string}
               width="$20"
+              showLabel={false}
+              autoCapitalize="none"
+              autoCorrect={false}
+              autoComplete="email"
             />
           )}
           name="email"
@@ -110,8 +115,13 @@ export default function ForgotPassword({ setType }: { setType: (type: string) =>
           width="$20"
           backgroundColor={t.colors.primary}
           onPress={handleSubmit(async (data) => {
+            if (!auth) {
+              Alert.alert('Erro', 'Recuperação de senha indisponível no momento.');
+              return;
+            }
+
             setLoading(true);
-            const { error } = await supabase.auth.resetPasswordForEmail(data.email, {
+            const { error } = await auth.resetPasswordForEmail(data.email, {
               redirectTo: resetPasswordRedirectTo,
             });
             setLoading(false);

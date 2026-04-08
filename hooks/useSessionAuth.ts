@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
-import { Session } from '@supabase/supabase-js';
+import type { Session } from '@supabase/auth-js';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { supabase } from '~/app/db';
+import { isSupabaseConfigured, supabase } from '~/app/db';
 
 export default function useSessionAuth() {
   const [session, setSession] = useState<Session | null>(null);
@@ -10,6 +10,13 @@ export default function useSessionAuth() {
 
   useEffect(() => {
     let mounted = true;
+
+    if (!isSupabaseConfigured || !supabase.auth) {
+      setLoading(false);
+      return () => {
+        mounted = false;
+      };
+    }
 
     const resolve = (newSession: Session | null) => {
       if (!mounted) return;

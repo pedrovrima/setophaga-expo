@@ -17,6 +17,7 @@ export default function ResetPassword({
   token: string;
   refreshToken: string;
 }) {
+  const auth = supabase.auth;
   const {
     control,
     handleSubmit,
@@ -28,7 +29,13 @@ export default function ResetPassword({
 
   useEffect(() => {
     const setSession = async () => {
-      const { error } = await supabase.auth.setSession({
+      if (!auth) {
+        Alert.alert('Erro', 'Redefinição de senha indisponível no momento');
+        setType('signin');
+        return;
+      }
+
+      const { error } = await auth.setSession({
         access_token: token,
         refresh_token: refreshToken,
       });
@@ -40,7 +47,7 @@ export default function ResetPassword({
     };
 
     setSession();
-  }, [token]);
+  }, [auth, setType, token, refreshToken]);
 
   return (
     <>
@@ -56,12 +63,16 @@ export default function ResetPassword({
             render={({ field }) => (
               <FloatingLabelInput
                 label="Nova senha"
-                placeholder="Nova senha"
+                placeholder="Digite a nova senha"
                 value={field.value}
                 onChangeText={field.onChange}
                 secureTextEntry
                 error={errors.password?.message as string}
                 width="$20"
+                showLabel={false}
+                autoCapitalize="none"
+                autoCorrect={false}
+                autoComplete="new-password"
               />
             )}
             name="password"
@@ -80,12 +91,16 @@ export default function ResetPassword({
             render={({ field }) => (
               <FloatingLabelInput
                 label="Confirme a nova senha"
-                placeholder="Confirme a nova senha"
+                placeholder="Repita a nova senha"
                 value={field.value}
                 onChangeText={field.onChange}
                 secureTextEntry
                 error={errors.confirmPassword?.message as string}
                 width="$20"
+                showLabel={false}
+                autoCapitalize="none"
+                autoCorrect={false}
+                autoComplete="new-password"
               />
             )}
             name="confirmPassword"
@@ -110,8 +125,13 @@ export default function ResetPassword({
           width="$20"
           backgroundColor={t.colors.primary}
           onPress={handleSubmit(async (data) => {
+            if (!auth) {
+              alert('Erro', 'Redefinição de senha indisponível no momento');
+              return;
+            }
+
             setLoading(true);
-            await supabase.auth
+            await auth
               .updateUser({
                 password: data.password,
               })

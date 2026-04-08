@@ -1,23 +1,26 @@
-import { Session } from '@supabase/supabase-js';
+import type { Session } from '@supabase/auth-js';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect, useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import Authentication from '~/components/screens/Authentication';
-import { supabase } from '~/services/supabase';
+import { supabase } from '~/app/db';
 
 export default function App() {
+  const auth = supabase.auth;
   const [session, setSession] = useState<Session | null>(null);
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    if (!auth) return;
+
+    auth.getSession().then(({ data: { session } }) => {
       setSession(session);
     });
 
-    supabase.auth.onAuthStateChange((_event, session) => {
+    auth.onAuthStateChange((_event, session) => {
       setSession(session);
     });
-  }, []);
+  }, [auth]);
   console.log(session);
 
   return (
@@ -39,7 +42,7 @@ export default function App() {
           </Text>
           <Pressable
             onPress={() => {
-              supabase.auth.signOut();
+              auth?.signOut();
             }}
             style={{
               marginTop: 20,

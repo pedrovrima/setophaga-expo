@@ -1,0 +1,19 @@
+# Local dependencies and caches
+node_modules
+.expo
+.gradle-home
+
+# Generated native directories
+android
+ios
+
+# Local build outputs
+apk
+dist
+web-build
+build-*.apk
+build-*.aab
+
+# Environment and local metadata
+.env
+.DS_Store

@@ -1,5 +1,6 @@
 import { Fragment, useEffect, useMemo, useState } from 'react';
 import { FlashList } from '@shopify/flash-list';
+import { Icon } from 'react-native-elements';
 
 import { Stack, router } from 'expo-router';
 import { Pressable, Linking, Platform, useWindowDimensions } from 'react-native';
@@ -146,13 +147,55 @@ export default function Home() {
   const isLargeScreen = width >= 768;
 
   useEffect(() => {
-    const openIfCan = async () => {
-      const can = await Linking.canOpenURL('setophaga-expo://');
-      if (can && Platform.OS === 'web') {
-        Linking.openURL('setophaga-expo://');
+    if (Platform.OS !== 'web' || typeof window === 'undefined') return;
+
+    // Check if this is a password recovery or email confirmation link
+    const hash = window.location.hash;
+    if (hash.includes('access_token=')) {
+      const params = new URLSearchParams(hash.substring(1));
+      const type = params.get('type');
+
+      // Redirect to appropriate page based on type
+      if (type === 'recovery') {
+        // Password recovery - redirect to reset-password page
+        router.replace(`/reset-password${hash}`);
+        return;
+      } else if (type === 'signup' || type === 'email_change' || type === 'invite') {
+        // Email confirmation - redirect to auth-callback page
+        router.replace(`/auth-callback${hash}`);
+        return;
       }
+    }
+
+    const mobileUserAgent =
+      /Android|iPhone|iPad|iPod/i.test(window.navigator.userAgent);
+
+    if (!mobileUserAgent) return;
+
+    const sessionKey = 'setophaga-app-open-attempted';
+    if (window.sessionStorage.getItem(sessionKey) === '1') return;
+    window.sessionStorage.setItem(sessionKey, '1');
+
+    const path = `${window.location.pathname}${window.location.search}${window.location.hash}`;
+    const normalizedPath = path === '/' ? '' : path.replace(/^\//, '');
+    const deepLink = `setophaga-expo://${normalizedPath}`;
+
+    // Use a hidden iframe on web so the browser attempts the app deep link
+    // without opening a separate tab or replacing the current page.
+    const iframe = document.createElement('iframe');
+    iframe.style.display = 'none';
+    iframe.setAttribute('aria-hidden', 'true');
+    iframe.src = deepLink;
+    document.body.appendChild(iframe);
+
+    const cleanup = window.setTimeout(() => {
+      iframe.remove();
+    }, 1500);
+
+    return () => {
+      window.clearTimeout(cleanup);
+      iframe.remove();
     };
-    openIfCan();
   }, []);
 
   const shouldShowResults = searchTerm.trim().length > 2;
@@ -186,16 +229,21 @@ export default function Home() {
           position="relative"
           zIndex={1}>
           <View
-            borderRadius="$12"
+            borderRadius={t.radii.button}
+            borderWidth={1}
+            borderColor={t.colors.inputBorder}
+            backgroundColor={t.colors.inputBg}
             overflow="hidden"
             maxWidth={Platform.OS === 'web' ? 600 : '100%'}
             width="100%"
             position="relative">
             <Input
-              borderColor="$borderColor"
+              borderWidth={0}
+              borderRadius={0}
               onChangeText={setSearchTerm}
               value={searchTerm}
-              backgroundColor={t.colors.inputBg}
+              color={t.colors.text}
+              backgroundColor="transparent"
               placeholder="Busque o nome do pássaro"
               placeholderTextColor={t.colors.textSecondary}
               height={48}
@@ -205,9 +253,23 @@ export default function Home() {
             {searchTerm.length > 0 ? (
               <Pressable
                 onPress={() => setSearchTerm('')}
-                style={{ position: 'absolute', right: 12, top: 12, padding: 4 }}
+                style={{
+                  position: 'absolute',
+                  right: 12,
+                  top: '50%',
+                  width: 24,
+                  height: 24,
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  transform: [{ translateY: -12 }],
+                }}
                 accessibilityLabel="Limpar busca">
-                <Text fontSize={18} color={t.colors.textSecondary}>✕</Text>
+                <Icon
+                  type="material-community"
+                  name="close"
+                  size={20}
+                  color={t.colors.textSecondary}
+                />
               </Pressable>
             ) : (
               <Image

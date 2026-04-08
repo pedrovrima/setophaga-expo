@@ -19,6 +19,7 @@
       "expo-font"
     ],
     "experiments": {
+      "reactCompiler": true,
       "typedRoutes": true,
       "tsconfigPaths": true
     },
@@ -32,10 +33,24 @@
     },
     "assetBundlePatterns": ["**/*"],
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "associatedDomains": ["applinks:xara-roan.vercel.app"]
     },
     "android": {
       "versionCode": 9,
+      "intentFilters": [
+        {
+          "action": "VIEW",
+          "autoVerify": true,
+          "data": [
+            {
+              "scheme": "https",
+              "host": "xara-roan.vercel.app"
+            }
+          ],
+          "category": ["BROWSABLE", "DEFAULT"]
+        }
+      ],
       "adaptiveIcon": {
         "foregroundImage": "./assets/icon-borda.png",
         "backgroundColor": "#FFFBF7"

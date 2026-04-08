@@ -1,7 +1,6 @@
 import { useState, useMemo, useCallback } from 'react';
-import { FlashList } from '@shopify/flash-list';
 import { View, Input, Text, XStack } from 'tamagui';
-import { Pressable } from 'react-native';
+import { Modal, Pressable, ScrollView } from 'react-native';
 import { Icon } from 'react-native-elements';
 import { tokens as t } from '~/src/theme/tokens';
 
@@ -28,9 +27,9 @@ export default function SearchableSelect({
   const [isOpen, setIsOpen] = useState(false);
 
   const filteredItems = useMemo(() => {
-    if (!search.trim()) return items.slice(0, 50);
+    if (!search.trim()) return items;
     const lower = search.toLowerCase();
-    return items.filter((item) => item.toLowerCase().includes(lower)).slice(0, 50);
+    return items.filter((item) => item.toLowerCase().includes(lower));
   }, [items, search]);
 
   const handleSelect = useCallback(
@@ -42,54 +41,58 @@ export default function SearchableSelect({
     [onChange]
   );
 
-  const displayValue = value && !isOpen ? value : search;
-
   return (
     <View gap={4}>
       <View position="relative">
-        <XStack alignItems="center">
-          <Input
-            flex={1}
+        <Pressable
+          disabled={disabled}
+          onPress={() => {
+            if (!disabled) {
+              setSearch('');
+              setIsOpen(true);
+            }
+          }}
+          style={{ opacity: disabled ? 0.5 : 1 }}>
+          <XStack
+            minHeight={50}
+            alignItems="center"
+            justifyContent="space-between"
+            borderWidth={1}
             borderColor={error ? t.colors.error : t.colors.inputBorder}
-            value={displayValue}
-            placeholder={placeholder}
-            onChangeText={(text) => {
-              setSearch(text);
-              setIsOpen(true);
-              if (value) onChange('');
-            }}
-            onFocus={() => {
-              setIsOpen(true);
-              if (value) {
-                setSearch(value);
-                onChange('');
-              }
-            }}
-            paddingVertical={12}
-            paddingLeft={16}
-            paddingRight={40}
-            backgroundColor="transparent"
-            placeholderTextColor={t.colors.placeholder}
-            editable={!disabled}
-            opacity={disabled ? 0.5 : 1}
-          />
-          {value ? (
-            <Pressable
-              onPress={() => {
-                onChange('');
-                setSearch('');
-                setIsOpen(false);
-              }}
-              style={{ position: 'absolute', right: 12, padding: 4 }}
-              accessibilityLabel="Limpar seleção">
-              <Text color={t.colors.textMuted}>✕</Text>
-            </Pressable>
-          ) : (
-            <View position="absolute" right={12}>
+            borderRadius={t.radii.input}
+            paddingHorizontal={16}
+            backgroundColor="transparent">
+            <Text color={value ? t.colors.text : t.colors.placeholder} flex={1}>
+              {value || placeholder}
+            </Text>
+            <XStack alignItems="center" gap="$2">
+              {value ? (
+                <Pressable
+                  onPress={(e) => {
+                    e.stopPropagation();
+                    onChange('');
+                    setSearch('');
+                    setIsOpen(false);
+                  }}
+                  style={{
+                    width: 24,
+                    height: 24,
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                  }}
+                  accessibilityLabel="Limpar seleção">
+                  <Icon
+                    name="close"
+                    type="material"
+                    color={t.colors.textMuted}
+                    size={18}
+                  />
+                </Pressable>
+              ) : null}
               <Icon name="arrow-drop-down" type="material" color={t.colors.textMuted} size={24} />
-            </View>
-          )}
-        </XStack>
+            </XStack>
+          </XStack>
+        </Pressable>
         <Text
           position="absolute"
           top={-8}
@@ -101,40 +104,109 @@ export default function SearchableSelect({
         </Text>
       </View>
 
-      {isOpen && filteredItems.length > 0 && (
-        <View
-          borderWidth={1}
-          borderColor={t.colors.borderSoft}
-          borderRadius={t.radii.card}
-          backgroundColor={t.colors.surface}
-          maxHeight={200}
-          overflow="hidden">
-          <FlashList
-            data={filteredItems}
-            estimatedItemSize={44}
-            keyExtractor={(item) => item}
-            renderItem={({ item }) => (
-              <Pressable
-                onPress={() => handleSelect(item)}
-                style={({ pressed }) => ({
-                  paddingVertical: 12,
-                  paddingHorizontal: 16,
-                  backgroundColor: pressed ? t.colors.surfaceTint : 'transparent',
-                })}>
-                <Text fontSize={14} color={t.colors.text}>
-                  {item}
+      <Modal
+        visible={isOpen}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setIsOpen(false)}>
+        <Pressable
+          onPress={() => setIsOpen(false)}
+          style={{
+            flex: 1,
+            backgroundColor: 'rgba(26,26,26,0.24)',
+            justifyContent: 'center',
+            padding: 20,
+          }}>
+          <Pressable onPress={(e) => e.stopPropagation()}>
+            <View
+              backgroundColor={t.colors.surface}
+              borderRadius={t.radii.card}
+              borderWidth={1}
+              borderColor={t.colors.borderSoft}
+              overflow="hidden"
+              alignSelf="center"
+              width="100%"
+              maxWidth={560}
+              height={420}>
+              <XStack
+                paddingHorizontal="$4"
+                paddingTop="$4"
+                paddingBottom="$3"
+                alignItems="center"
+                justifyContent="space-between"
+                borderBottomWidth={1}
+                borderColor={t.colors.borderSoft}
+                backgroundColor={t.colors.surfaceTint}>
+                <Text color={t.colors.text} fontSize={16} fontWeight="700">
+                  {label}
                 </Text>
-              </Pressable>
-            )}
-          />
-        </View>
-      )}
+                <Pressable
+                  onPress={() => setIsOpen(false)}
+                  style={{
+                    width: 28,
+                    height: 28,
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                  }}
+                  accessibilityLabel="Fechar seleção">
+                  <Icon name="close" type="material" color={t.colors.textMuted} size={20} />
+                </Pressable>
+              </XStack>
 
-      {isOpen && search.trim().length > 0 && filteredItems.length === 0 && (
-        <Text fontSize={12} color={t.colors.textMuted} marginLeft={12}>
-          Nenhum resultado para "{search}"
-        </Text>
-      )}
+              <View padding="$4" borderBottomWidth={1} borderColor={t.colors.borderSoft}>
+                <Input
+                  value={search}
+                  onChangeText={setSearch}
+                  autoFocus
+                  color={t.colors.text}
+                  placeholder={placeholder}
+                  placeholderTextColor={t.colors.placeholder}
+                  borderColor={t.colors.inputBorder}
+                  backgroundColor="transparent"
+                />
+              </View>
+
+              {filteredItems.length > 0 ? (
+                <ScrollView
+                  nestedScrollEnabled
+                  showsVerticalScrollIndicator
+                  contentContainerStyle={{ paddingBottom: 8 }}
+                  style={{ flex: 1 }}>
+                  {filteredItems.map((item) => (
+                    <Pressable
+                      key={item}
+                      onPress={() => handleSelect(item)}
+                      style={({ pressed }) => ({
+                        paddingVertical: 14,
+                        paddingHorizontal: 16,
+                        backgroundColor:
+                          pressed || item === value ? t.colors.surfaceTint : 'transparent',
+                      })}>
+                      <XStack alignItems="center" justifyContent="space-between" gap="$3">
+                        <Text fontSize={14} color={t.colors.text} flex={1}>
+                          {item}
+                        </Text>
+                        {item === value ? (
+                          <Icon
+                            name="check"
+                            type="material-community"
+                            color={t.colors.primary}
+                            size={16}
+                          />
+                        ) : null}
+                      </XStack>
+                    </Pressable>
+                  ))}
+                </ScrollView>
+              ) : (
+                <View flex={1} alignItems="center" justifyContent="center" padding="$4">
+                  <Text color={t.colors.textMuted}>Nenhum resultado para "{search}"</Text>
+                </View>
+              )}
+            </View>
+          </Pressable>
+        </Pressable>
+      </Modal>
 
       {error && (
         <Text marginLeft={12} fontSize={12} color={t.colors.error}>

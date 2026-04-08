@@ -1,35 +1,30 @@
-import { Dialog, Spinner } from 'tamagui';
+import { Spinner, View } from 'tamagui';
 
-export default function LoadingDialog({ loading }) {
+export default function LoadingDialog({ loading }: { loading: boolean }) {
+  if (!loading) return null;
+
   return (
-    <Dialog open={loading}>
-      <Dialog.Portal>
-        <Dialog.Overlay
-          key="overlay"
-          animation="slow"
-          opacity={0.5}
-          enterStyle={{ opacity: 0 }}
-          exitStyle={{ opacity: 0 }}
-        />
-        <Dialog.Content
-          bordered
-          elevate
-          key="content"
-          animateOnly={['transform', 'opacity']}
-          animation={[
-            'quicker',
-            {
-              opacity: {
-                overshootClamping: true,
-              },
-            },
-          ]}
-          enterStyle={{ x: 0, y: -20, opacity: 0, scale: 0.9 }}
-          exitStyle={{ x: 0, y: 10, opacity: 0, scale: 0.95 }}
-          gap="$4">
-          <Spinner />
-        </Dialog.Content>
-      </Dialog.Portal>
-    </Dialog>
+    <View
+      position="absolute"
+      top={0}
+      right={0}
+      bottom={0}
+      left={0}
+      zIndex={1000}
+      backgroundColor="rgba(0,0,0,0.35)"
+      alignItems="center"
+      justifyContent="center"
+      pointerEvents="auto">
+      <View
+        backgroundColor="$background"
+        borderRadius="$6"
+        padding="$4"
+        elevate
+        shadowColor="$shadowColor"
+        shadowOpacity={0.2}
+        shadowRadius={12}>
+        <Spinner size="large" />
+      </View>
+    </View>
   );
 }

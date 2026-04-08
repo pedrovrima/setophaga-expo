@@ -1,48 +1,62 @@
 import { useMemo, useState } from 'react';
 import { Icon } from 'react-native-elements';
-import type { FontSizeTokens, SelectProps } from 'tamagui';
-import { Adapt, Label, Select, Sheet, XStack, YStack, View, Text } from 'tamagui';
+import { Modal, Pressable, ScrollView } from 'react-native';
+import { Text, View, XStack } from 'tamagui';
 import { tokens as t } from '~/src/theme/tokens';
 
-const ChevronDown = () => (
-  <Icon type="material-community" name="chevron-down" size={20} color="black" />
-);
-
-const ChevronUp = () => (
-  <Icon type="material-community" name="chevron-up" size={20} color="black" />
-);
-
-const Check = ({ size }: { size: number }) => (
-  <Icon type="material-community" name="check" size={size} color="black" />
-);
+type SelectProps = {
+  value: string;
+  onChange: (value: string) => void;
+  changeCallback?: () => void;
+  items: string[];
+  label: string;
+  disabled?: boolean;
+  backgroundColor?: string;
+  placeholder?: string;
+};
 
 export default function SelectComp({
   value,
   onChange,
-  changeCallback,
+  changeCallback = () => {},
   items,
   label,
-  disabled,
-  backgroundColor,
-  ...props
-}) {
+  disabled = false,
+  backgroundColor = 'transparent',
+  placeholder = 'Selecione uma opção',
+}: SelectProps) {
+  const [isOpen, setIsOpen] = useState(false);
+
+  const selectedLabel = useMemo(() => {
+    return value || placeholder;
+  }, [placeholder, value]);
+
   return (
-    <Select
-      value={value}
-      onValueChange={(e) => {
-        onChange(e);
-        changeCallback();
-      }}
-      disablePreventBodyScroll
-      {...props}>
+    <View gap={4}>
       <View position="relative">
-        <Select.Trigger
-          borderColor={t.colors.inputBorder}
-          backgroundColor={backgroundColor}
+        <Pressable
           disabled={disabled}
-          iconAfter={ChevronDown}>
-          <Select.Value placeholder={`Selecione uma opção`} />
-        </Select.Trigger>
+          onPress={() => setIsOpen(true)}
+          style={{ opacity: disabled ? 0.5 : 1 }}>
+          <XStack
+            minHeight={50}
+            alignItems="center"
+            justifyContent="space-between"
+            borderWidth={1}
+            borderColor={t.colors.inputBorder}
+            borderRadius={t.radii.input}
+            paddingHorizontal={16}
+            backgroundColor={backgroundColor}>
+            <Text color={value ? t.colors.text : t.colors.placeholder}>{selectedLabel}</Text>
+            <Icon
+              type="material-community"
+              name={isOpen ? 'chevron-up' : 'chevron-down'}
+              size={20}
+              color={t.colors.textMuted}
+            />
+          </XStack>
+        </Pressable>
+
         <Text
           position="absolute"
           top={-8}
@@ -53,90 +67,96 @@ export default function SelectComp({
           {label}
         </Text>
       </View>
-      <Adapt when="sm" platform="touch">
-        <Sheet
-          native={!!props.native}
-          modal
-          dismissOnSnapToBottom
-          animationConfig={{
-            type: 'spring',
-            damping: 20,
-            mass: 1.2,
-            stiffness: 250,
+
+      <Modal
+        visible={isOpen && !disabled}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setIsOpen(false)}>
+        <Pressable
+          onPress={() => setIsOpen(false)}
+          style={{
+            flex: 1,
+            backgroundColor: 'rgba(26,26,26,0.24)',
+            justifyContent: 'center',
+            padding: 20,
           }}>
-          <Sheet.Frame>
-            <Sheet.ScrollView>
-              <Adapt.Contents />
-            </Sheet.ScrollView>
-          </Sheet.Frame>
-          <Sheet.Overlay animation="lazy" enterStyle={{ opacity: 0 }} exitStyle={{ opacity: 0 }} />
-        </Sheet>
-      </Adapt>
+          <Pressable onPress={(e) => e.stopPropagation()}>
+            <View
+              backgroundColor={t.colors.surface}
+              borderRadius={t.radii.card}
+              borderWidth={1}
+              borderColor={t.colors.borderSoft}
+              overflow="hidden"
+              alignSelf="center"
+              width="100%"
+              maxWidth={560}
+              height={420}>
+              <XStack
+                paddingHorizontal="$4"
+                paddingTop="$4"
+                paddingBottom="$3"
+                alignItems="center"
+                justifyContent="space-between"
+                borderBottomWidth={1}
+                borderColor={t.colors.borderSoft}
+                backgroundColor={t.colors.surfaceTint}>
+                <Text color={t.colors.text} fontSize={16} fontWeight="700">
+                  {label}
+                </Text>
+                <Pressable
+                  onPress={() => setIsOpen(false)}
+                  style={{
+                    width: 28,
+                    height: 28,
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                  }}
+                  accessibilityLabel="Fechar seleção">
+                  <Icon name="close" type="material" color={t.colors.textMuted} size={20} />
+                </Pressable>
+              </XStack>
 
-      <Select.Content zIndex={200000}>
-        <Select.ScrollUpButton
-          alignItems="center"
-          justifyContent="center"
-          position="relative"
-          width="100%"
-          height="$3">
-          <YStack zIndex={10}>
-            <ChevronUp />
-          </YStack>
-        </Select.ScrollUpButton>
+              <ScrollView
+                nestedScrollEnabled
+                showsVerticalScrollIndicator
+                contentContainerStyle={{ paddingBottom: 8 }}
+                style={{ flex: 1 }}>
+                {items.map((item) => {
+                  const isSelected = item === value;
 
-        <Select.Viewport
-          // to do animations:
-          // animation="quick"
-          // animateOnly={['transform', 'opacity']}
-          // enterStyle={{ o: 0, y: -10 }}
-          // exitStyle={{ o: 0, y: 10 }}
-          minWidth={200}>
-          <Select.Group>
-            <Select.Label>{label}</Select.Label>
-            {/* for longer lists memoizing these is useful */}
-            {useMemo(
-              () =>
-                items.map((item, i) => {
                   return (
-                    <Select.Item index={i} key={item} value={item}>
-                      <Select.ItemText>{item}</Select.ItemText>
-                      <Select.ItemIndicator marginLeft="auto">
-                        <Check size={16} />
-                      </Select.ItemIndicator>
-                    </Select.Item>
+                    <Pressable
+                      key={item}
+                      onPress={() => {
+                        onChange(item);
+                        changeCallback();
+                        setIsOpen(false);
+                      }}
+                      style={({ pressed }) => ({
+                        paddingVertical: 14,
+                        paddingHorizontal: 16,
+                        backgroundColor: pressed || isSelected ? t.colors.surfaceTint : 'transparent',
+                      })}>
+                      <XStack alignItems="center" justifyContent="space-between">
+                        <Text color={t.colors.text}>{item}</Text>
+                        {isSelected ? (
+                          <Icon
+                            type="material-community"
+                            name="check"
+                            size={16}
+                            color={t.colors.textMuted}
+                          />
+                        ) : null}
+                      </XStack>
+                    </Pressable>
                   );
-                }),
-              [items]
-            )}
-          </Select.Group>
-          {/* Native gets an extra icon */}
-          {props.native && (
-            <YStack
-              position="absolute"
-              right={0}
-              top={0}
-              bottom={0}
-              alignItems="center"
-              justifyContent="center"
-              width={'$4'}
-              pointerEvents="none">
-              <ChevronDown />
-            </YStack>
-          )}
-        </Select.Viewport>
-
-        <Select.ScrollDownButton
-          alignItems="center"
-          justifyContent="center"
-          position="relative"
-          width="100%"
-          height="$3">
-          <YStack zIndex={10}>
-            <ChevronDown />
-          </YStack>
-        </Select.ScrollDownButton>
-      </Select.Content>
-    </Select>
+                })}
+              </ScrollView>
+            </View>
+          </Pressable>
+        </Pressable>
+      </Modal>
+    </View>
   );
 }

@@ -7,6 +7,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { supabase } from '~/app/db';
 
 export default function AuthCallbackPage() {
+  const auth = supabase.auth;
   const router = useRouter();
   const ScreenHeight = Dimensions.get('window').height;
   const [error, setError] = useState<string | null>(null);
@@ -25,7 +26,13 @@ export default function AuthCallbackPage() {
           return;
         }
 
-        const { error: sessionError } = await supabase.auth.setSession({
+        if (!auth) {
+          setError('Login indisponível no momento.');
+          setTimeout(() => router.replace('/'), 2000);
+          return;
+        }
+
+        const { error: sessionError } = await auth.setSession({
           access_token,
           refresh_token,
         });
@@ -50,7 +57,7 @@ export default function AuthCallbackPage() {
     }
 
     handleCallback();
-  }, []);
+  }, [auth, router]);
 
   return (
     <YStack

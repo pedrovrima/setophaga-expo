@@ -1,6 +1,14 @@
 {
+  "cli": {
+    "appVersionSource": "local"
+  },
   "build": {
     "preview": {
+      "env": {
+        "EXPO_PUBLIC_SUPABASE_URL": "https://ocpgnubszfeasiciqeqw.supabase.co",
+        "EXPO_PUBLIC_SUPABASE_ANON_KEY": "sb_publishable_DJ3el85oG_yLCp_uJCvX4A_gEq6zYyH",
+        "EXPO_PUBLIC_WEB_ORIGIN": "https://xara-roan.vercel.app"
+      },
       "android": {
         "buildType": "apk"
       }
@@ -16,6 +24,12 @@
     "preview4": {
       "distribution": "internal"
     },
-    "production": {}
+    "production": {
+      "env": {
+        "EXPO_PUBLIC_SUPABASE_URL": "https://ocpgnubszfeasiciqeqw.supabase.co",
+        "EXPO_PUBLIC_SUPABASE_ANON_KEY": "sb_publishable_DJ3el85oG_yLCp_uJCvX4A_gEq6zYyH",
+        "EXPO_PUBLIC_WEB_ORIGIN": "https://xara-roan.vercel.app"
+      }
+    }
   }
 }

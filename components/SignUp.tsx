@@ -14,6 +14,7 @@ const webOrigin = (process.env.EXPO_PUBLIC_WEB_ORIGIN || 'https://xara-roan.verc
 const emailRedirectTo = `${webOrigin}/auth-callback`;
 
 export default function SignUp({ setType }: { setType: (type: string) => void }) {
+  const auth = supabase.auth;
   const {
     control,
     handleSubmit,
@@ -97,11 +98,14 @@ export default function SignUp({ setType }: { setType: (type: string) => void })
           render={({ field }) => (
             <FloatingLabelInput
               label="Nome"
-              placeholder="Helmut"
+              placeholder="Seu nome"
               value={field.value}
               onChangeText={field.onChange}
               error={errors.name?.message as string}
               width="$20"
+              showLabel={false}
+              autoCapitalize="words"
+              autoComplete="given-name"
             />
           )}
           name="name"
@@ -113,11 +117,14 @@ export default function SignUp({ setType }: { setType: (type: string) => void })
           render={({ field }) => (
             <FloatingLabelInput
               label="Sobrenome"
-              placeholder="Sick"
+              placeholder="Seu sobrenome"
               value={field.value}
               onChangeText={field.onChange}
               error={errors.lastName?.message as string}
               width="$20"
+              showLabel={false}
+              autoCapitalize="words"
+              autoComplete="family-name"
             />
           )}
           name="lastName"
@@ -129,11 +136,15 @@ export default function SignUp({ setType }: { setType: (type: string) => void })
           render={({ field }) => (
             <FloatingLabelInput
               label="Email"
-              placeholder="helmutsick@gmail.com"
+              placeholder="seuemail@exemplo.com"
               value={field.value}
               onChangeText={field.onChange}
               error={errors.email?.message as string}
               width="$20"
+              showLabel={false}
+              autoCapitalize="none"
+              autoCorrect={false}
+              autoComplete="email"
             />
           )}
           name="email"
@@ -148,12 +159,16 @@ export default function SignUp({ setType }: { setType: (type: string) => void })
           render={({ field }) => (
             <FloatingLabelInput
               label="Senha"
-              placeholder="Senha"
+              placeholder="Crie uma senha"
               value={field.value}
               onChangeText={field.onChange}
               secureTextEntry
               error={errors.password?.message as string}
               width="$20"
+              showLabel={false}
+              autoCapitalize="none"
+              autoCorrect={false}
+              autoComplete="new-password"
             />
           )}
           name="password"
@@ -172,10 +187,15 @@ export default function SignUp({ setType }: { setType: (type: string) => void })
           width="$20"
           backgroundColor={t.colors.primary}
           onPress={handleSubmit(async (data) => {
+            if (!auth) {
+              setSignUpError('Cadastro indisponível no momento.');
+              return;
+            }
+
             const { email, password, name, lastName } = data;
             setSignUpError('');
             setLoading(true);
-            const { error } = await supabase.auth.signUp({
+            const { error } = await auth.signUp({
               email,
               password,
               options: {
