@@ -55,7 +55,7 @@
         "foregroundImage": "./assets/icon-borda.png",
         "backgroundColor": "#FFFBF7"
       },
-      "package": "com.pedrovrima.xara"
+      "package": "br.com.xara"
     },
     "extra": {
       "router": {
