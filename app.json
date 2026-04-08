@@ -2,7 +2,7 @@
   "expo": {
     "name": "Xará",
     "slug": "setophaga-expo",
-    "version": "0.9.1",
+    "version": "0.1",
     "scheme": "setophaga-expo",
     "web": {
       "bundler": "metro",
@@ -37,7 +37,7 @@
       "associatedDomains": ["applinks:xara-roan.vercel.app"]
     },
     "android": {
-      "versionCode": 9,
+      "versionCode": 1,
       "intentFilters": [
         {
           "action": "VIEW",
