@@ -6,7 +6,7 @@
     "scheme": "setophaga-expo",
     "web": {
       "bundler": "metro",
-      "output": "static",
+      "output": "server",
       "favicon": "./assets/icon.png"
     },
     "plugins": [
