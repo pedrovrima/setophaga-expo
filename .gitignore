@@ -26,3 +26,9 @@ android
 .metro-health-check*
 .vercel
 aab/
+
+# Keystore credentials
+CREDENCIAIS-KEYSTORE.md
+*.keystore
+!debug.keystore
+android/keystore.properties

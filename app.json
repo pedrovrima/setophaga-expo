@@ -6,7 +6,7 @@
     "scheme": "setophaga-expo",
     "web": {
       "bundler": "metro",
-      "output": "server",
+      "output": "static",
       "favicon": "./assets/icon.png"
     },
     "plugins": [
@@ -55,7 +55,7 @@
         "foregroundImage": "./assets/icon-borda.png",
         "backgroundColor": "#FFFBF7"
       },
-      "package": "com.pedrovrima.setophagaexpo"
+      "package": "com.pedrovrima.xara"
     },
     "extra": {
       "router": {
