@@ -10,6 +10,13 @@ Este diretório contém todos os assets necessários para publicar o app no Goog
 - **`icon-512x512.png`** (512 x 512 px)
   - Formato: PNG
   - Uso: Ícone principal do app
+  - Logo ampliado para máxima visibilidade
+
+#### ✅ Feature Graphic
+- **`feature-graphic.png`** (1024 x 500 px)
+  - Formato: PNG
+  - Uso: Banner principal da ficha do app
+  - Design com gradiente roxo e logo + texto
 
 #### ✅ Screenshots (Mobile)
 - **`1-home.png`** - Tela inicial com logo e busca
@@ -22,6 +29,28 @@ Este diretório contém todos os assets necessários para publicar o app no Goog
 - Escala: 2x (786 x 1702 efetivo)
 - Formato: PNG
 - ✅ Atendem requisitos do Google Play (mínimo 320px)
+
+#### ✅ Screenshots (Tablet 7")
+- **`tablet-7-1-home.png`** - Tela inicial
+- **`tablet-7-2-search.png`** - Campo de busca
+- **`tablet-7-3-results.png`** - Resultados da busca
+- **`tablet-7-4-species.png`** - Página de detalhes
+
+**Especificações:**
+- Dimensões: 1200 x 1920 px
+- Escala: 1.5x
+- Formato: PNG
+
+#### ✅ Screenshots (Tablet 10")
+- **`tablet-10-1-home.png`** - Tela inicial
+- **`tablet-10-2-search.png`** - Campo de busca
+- **`tablet-10-3-results.png`** - Resultados da busca
+- **`tablet-10-4-species.png`** - Página de detalhes
+
+**Especificações:**
+- Dimensões: 1600 x 2560 px
+- Escala: 1.5x
+- Formato: PNG
 
 ---
 
@@ -38,9 +67,22 @@ Este diretório contém todos os assets necessários para publicar o app no Goog
 - PNG de 32 bits ✅
 - Até 1 MB ✅
 
-### 2. Screenshots
+### 2. Feature Graphic
 
-**Localização:** Configuração do app → Recursos gráficos da ficha → Screenshots de smartphone
+**Localização:** Configuração do app → Recursos gráficos da ficha → Imagem de recursos gráficos
+
+**Arquivo:** `feature-graphic.png`
+
+**Requisitos:**
+- 1024 x 500 px ✅
+- JPEG ou PNG ✅
+- Até 15 MB ✅
+
+### 3. Screenshots
+
+**Localização:** Configuração do app → Recursos gráficos da ficha
+
+#### Screenshots de smartphone
 
 **Arquivos:** Todos os 4 screenshots (ou escolha 2-8 deles)
 
@@ -56,6 +98,18 @@ Este diretório contém todos os assets necessários para publicar o app no Goog
 2. `3-results.png` - Funcionalidade principal (busca)
 3. `4-species.png` - Detalhes e informações
 4. `2-search.png` - Interação (digitando)
+
+#### Screenshots de tablet 7"
+
+**Arquivos:** `tablet-7-*.png` (4 screenshots)
+
+**Uso:** Opcional, mas recomendado para melhor visualização em tablets
+
+#### Screenshots de tablet 10"
+
+**Arquivos:** `tablet-10-*.png` (4 screenshots)
+
+**Uso:** Opcional, mas recomendado para melhor visualização em tablets grandes
 
 ---
 
@@ -108,11 +162,16 @@ Se precisar atualizar os screenshots:
 # Instalar dependência (se ainda não tiver)
 npm install --save-dev puppeteer
 
-# Executar script
+# Executar script de mobile
 node scripts/take-screenshots.js
+
+# Executar script de tablets
+node scripts/take-tablet-screenshots.js
 ```
 
 Os novos screenshots serão salvos neste diretório.
+
+**Nota:** O feature graphic e o ícone são gerados via scripts Python usando PIL (Pillow).
 
 ---
 
@@ -120,13 +179,16 @@ Os novos screenshots serão salvos neste diretório.
 
 Antes de fazer upload no Google Play Console:
 
-- [x] Ícone 512x512 preparado
-- [x] Mínimo 2 screenshots prontos
+- [x] Ícone 512x512 preparado (logo ampliado)
+- [x] Feature Graphic 1024x500 preparado
+- [x] Mínimo 2 screenshots mobile prontos (temos 4)
+- [x] Screenshots tablet 7" preparados (4 screenshots)
+- [x] Screenshots tablet 10" preparados (4 screenshots)
 - [x] Screenshots em formato adequado (PNG)
 - [x] Dimensões dentro dos limites
-- [ ] Descrição curta pronta
-- [ ] Descrição completa pronta
-- [ ] Categoria selecionada
+- [x] Descrição curta pronta
+- [x] Descrição completa pronta
+- [x] Categoria selecionada
 
 ---
 
