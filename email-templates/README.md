@@ -8,11 +8,20 @@ Este diretório contém os templates de email personalizados para o Xará, usand
 Template para o fluxo de recuperação de senha.
 
 **Variável Supabase:** `{{ .ConfirmationURL }}`
+**Uso:** Supabase Auth
 
 ### 2. Confirmar Usuário (`confirmar-usuario.html`)
 Template para confirmação de email ao criar uma nova conta.
 
 **Variável Supabase:** `{{ .ConfirmationURL }}`
+**Uso:** Supabase Auth
+
+### 3. Beta Testers (`beta-testers.html`)
+Template para email de boas-vindas aos beta testers.
+
+**Variáveis:** Nenhuma (HTML estático)
+**Uso:** Resend (envio manual)
+**Guia de envio:** Ver `enviar-beta-testers-resend.md`
 
 ## Cores Utilizadas
 
